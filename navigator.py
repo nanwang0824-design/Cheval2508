@@ -6,7 +6,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 
 from browser import Browser
-from parsers.match_list_processor import MatchListProcessor
 
 class Navigator:
     def __init__(self, browser: Browser):
@@ -44,6 +43,6 @@ class Navigator:
             print(f"Information: year={year}, month={month}")
             raise e
 
-    def open_match_day(self, race_day_link):
-        """点击进入单个比赛日页面"""
+    def open_match(self, match_code, match_action):
+        """Click and go to the page of a match"""
         pass

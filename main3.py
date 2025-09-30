@@ -15,8 +15,9 @@ def main():
     month = 7 # random.choice(range(1, 13))
     navigator.search_by_year_month(year, month)
     html = navigator.get_html()
-    l = parsers.match_list.parse(html=html)
-    print(l)
+    code_name_link_action_list = parsers.match_list.parse(html=html)
+    for cnla in code_name_link_action_list:
+        navigator.open_match(cnla.code, cnla.action)
 
 
     

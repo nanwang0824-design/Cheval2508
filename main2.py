@@ -30,10 +30,6 @@ def minify_html(html: str, filepath: str ="minified.html"):
 
 if __name__ == "__main__":
   
-  #html = examples.html.html_race_1
-  #minify_html(html)
-  #exit()
-  
   html = examples.html.html_macth_list_1
   #minify_html(html)
   parser = MatchListParser()
