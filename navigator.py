@@ -43,6 +43,22 @@ class Navigator:
             print(f"Information: year={year}, month={month}")
             raise e
 
-    def open_match(self, match_code, match_action):
+    def open_match(self, code, action):
         """Click and go to the page of a match"""
+        pass
+
+    def open_race(self, code, link):
+        """Click and go to the page of a race"""
+        pass
+
+    def open_horse(self, code, action):
+        """Click and go to the page of a horse"""
+        pass
+
+    def open_jockey(self, code, action):
+        """Click and go to the page of a jockey"""
+        pass
+
+    def open_trainer(self, code, action):
+        """Click and go to the page of a jockey"""
         pass
