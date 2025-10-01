@@ -2,13 +2,13 @@
 
 import re
 from datetime import datetime
-from typing import Dict
+from typing import List
 
 from bs4 import BeautifulSoup
+from bs4.element import Tag
 
-from utils import extract_doaction_code
-
-from src.cheval.models.models import Race, Prize, ResultOfRace
+from ..utils.misc import extract_doaction_code
+from ..models.models import Race, Prize, ResultOfRace, CodeNameLinkAction
 
 class RaceParser:
 
@@ -19,9 +19,9 @@ class RaceParser:
         """read the html string of a race, and save the informations;
         return the links of horses, jockeys and trainers if return_links=True"""
 
-        links_of_horses: Dict[str, str] = {}
-        links_of_jockeys: Dict[str, str] = {}
-        links_of_trainers: Dict[str, str] = {}
+        links_of_horses: List[CodeNameLinkAction] = []
+        links_of_jockeys: List[CodeNameLinkAction] = []
+        links_of_trainers: List[CodeNameLinkAction] = []
 
         soup = BeautifulSoup(html, "html.parser")
 
@@ -114,7 +114,7 @@ class RaceParser:
             #self.basic_info.append_prize(race_prize)
 
         # read the result of every horse in the race
-        results = soup.select('table.basic.narrow-xy.striped tbody tr')
+        results: List[Tag] = list(soup.select('table.basic.narrow-xy.striped tbody tr'))
         number_horses_in_race = len(results)
         race.number_horses_in_race = number_horses_in_race
         for result in results:
@@ -135,7 +135,7 @@ class RaceParser:
             horse_code = horse_link.split("=")[1]
             horse_name = temp.get_text(strip=True)
             if return_links:
-                links_of_horses[horse_code] = horse_link
+                links_of_horses.append(CodeNameLinkAction(code=horse_code, name=horse_name, link=horse_link))
             # 性齢
             sex_and_age = result.select_one("td.age").get_text(strip=True)
             # 負担重量
@@ -145,8 +145,10 @@ class RaceParser:
             if temp:
                 jockey_code = extract_doaction_code(temp["onclick"])
                 jockey_name = temp.get_text(strip=True)
+                jockey_action = temp["onclick"].replace("return ", "")
                 if return_links:
-                    links_of_jockeys[jockey_code] = temp["onclick"].replace("return ", "")
+                    links_of_jockeys.append(CodeNameLinkAction(code=jockey_code, name=jockey_name, action=jockey_action))
+                    #links_of_jockeys[jockey_code] = temp["onclick"].replace("return ", "")
             else:
                 jockey_code = None #BasicInfo.Result.JOCKEY_CODE_EMPTY
                 jockey_name = result.select_one("td.jockey").get_text(strip=True)
@@ -182,8 +184,10 @@ class RaceParser:
             if temp:
                 trainer_code = extract_doaction_code(temp["onclick"])
                 trainer_name = temp.get_text(strip=True)
+                trainer_action = temp["onclick"].replace("return ", "")
                 if return_links:
-                    links_of_trainers[trainer_code] = temp["onclick"].replace("return ", "")
+                    links_of_trainers.append(CodeNameLinkAction(code=trainer_code, name=trainer_name, action=trainer_action))
+                    #links_of_trainers[trainer_code] = temp["onclick"].replace("return ", "")
             else:
                 trainer_code = None #BasicInfo.Result.TRAINER_CODE_EMPTY
                 trainer_name = result.select_one("td.trainer").get_text(strip=True)

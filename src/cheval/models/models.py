@@ -1,11 +1,11 @@
 # models.py
 
 import re
-
-from utils import order_str_to_int, sexage_to_sex_age
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import List, Optional
+
+from ..utils.misc import order_str_to_int, sexage_to_sex_age
 
 @dataclass(slots=True, kw_only=True)
 class CodeNameLinkAction:

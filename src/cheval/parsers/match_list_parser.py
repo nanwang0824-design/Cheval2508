@@ -7,8 +7,8 @@ from typing import Dict, List
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 
-from utils import extract_doaction_code
-from src.cheval.models.models import CodeNameLinkAction
+from ..utils.misc import extract_doaction_code
+from ..models.models import CodeNameLinkAction
 
 #from models import Match
 

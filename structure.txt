@@ -1,0 +1,107 @@
+卷 Data 的文件夹 PATH 列表
+卷序列号为 D004-52E6
+E:.
+│  .gitignore
+│  DEV_NOTES.md
+│  pytest.ini
+│  README.md
+│  requirements.txt
+│  structure.txt
+│  
+├─.pytest_cache
+│  │  .gitignore
+│  │  CACHEDIR.TAG
+│  │  README.md
+│  │  
+│  └─v
+│      └─cache
+│              lastfailed
+│              nodeids
+│              
+├─data
+├─examples
+│  │  html.py
+│  │  minified_html.html
+│  │  minify_html.py
+│  │  __init__.py
+│  │  
+│  └─__pycache__
+│          html.cpython-310.pyc
+│          html_horse.cpython-310.pyc
+│          __init__.cpython-310.pyc
+│          
+├─src
+│  └─cheval
+│      │  config.py
+│      │  logging_conf.py
+│      │  main.py
+│      │  __init__.py
+│      │  
+│      ├─browser
+│      │      browser.py
+│      │      navigator.py
+│      │      __init__.py
+│      │      
+│      ├─models
+│      │  │  models.py
+│      │  │  
+│      │  └─__pycache__
+│      │          models.cpython-310.pyc
+│      │          
+│      ├─parsers
+│      │  │  base_parser.py
+│      │  │  horse_parser.py
+│      │  │  jockey_parser.py
+│      │  │  match_list_parser.py
+│      │  │  match_parser.py
+│      │  │  parsers.py
+│      │  │  race_parser.py
+│      │  │  trainer_parser.py
+│      │  │  __init__.py
+│      │  │  
+│      │  └─__pycache__
+│      │          horse_parser.cpython-310.pyc
+│      │          horse_processor.cpython-310.pyc
+│      │          html_storage.cpython-310.pyc
+│      │          jockey_parser.cpython-310.pyc
+│      │          match_list_parser.cpython-310.pyc
+│      │          match_list_processor.cpython-310.pyc
+│      │          match_parser.cpython-310.pyc
+│      │          match_processor.cpython-310.pyc
+│      │          race_list_processor.cpython-310.pyc
+│      │          race_parser.cpython-310.pyc
+│      │          race_processor.cpython-310.pyc
+│      │          trainer_parser.cpython-310.pyc
+│      │          __init__.cpython-310.pyc
+│      │          
+│      ├─storage
+│      │      database.py
+│      │      html_storage.py
+│      │      __init__.py
+│      │      
+│      ├─utils
+│      │      misc.py
+│      │      waiter.py
+│      │      
+│      └─__pycache__
+│              __init__.cpython-310.pyc
+│              
+├─tests
+│  │  test_browser.py
+│  │  test_parsers.py
+│  │  __init__.py
+│  │  
+│  └─__pycache__
+│          test_parsers.cpython-310-pytest-8.4.2.pyc
+│          __init__.cpython-310.pyc
+│          
+└─__pycache__
+        basic_info.cpython-310.pyc
+        browser.cpython-310.pyc
+        config.cpython-310.pyc
+        models.cpython-310.pyc
+        navigator.cpython-310.pyc
+        utils.cpython-310.pyc
+        waiter.cpython-310.pyc
+        __init__.cpython-310.pyc
+        

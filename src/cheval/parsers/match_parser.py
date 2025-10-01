@@ -7,9 +7,8 @@ from typing import Dict, List
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 
-from utils import extract_doaction_code
-
-from src.cheval.models.models import Match, CodeNameLinkAction
+from ..utils.misc import extract_doaction_code
+from ..models.models import Match, CodeNameLinkAction
 
 class MatchParser:
 
@@ -36,7 +35,6 @@ class MatchParser:
         races: List[Tag] = list(soup.select("tbody tr"))
         thematch.number_races_in_match = len(races)
         for race in races:
-            print(race.prettify())
             race_name = race.select_one("td.race_name").get_text(strip=True)
             race_link = str(race.select_one("th.race_num a")["href"])
             race_code = race_link.replace("/JRADB/accessS.html?CNAME=", "")

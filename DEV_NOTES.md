@@ -14,6 +14,8 @@ returns from race_parser of old version
 
 本地安装包改为线上安装，否则requirements难以正确生成
 
+src/cheval/parsers/parsers.py以后不用的话就删掉
+
 GitHub更新：
 git add .
 git commit -m "更新了XXX"
