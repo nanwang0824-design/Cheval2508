@@ -7,7 +7,7 @@ from typing import Dict, List, Optional
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 
-from models import Jockey, SummaryOfJockeyTrainer
+from src.cheval.models.models import Jockey, SummaryOfJockeyTrainer
 
 class JockeyParser:
     def __init__(self):

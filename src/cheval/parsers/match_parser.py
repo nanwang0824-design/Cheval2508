@@ -9,7 +9,7 @@ from bs4.element import Tag
 
 from utils import extract_doaction_code
 
-from models import Match, CodeNameLinkAction
+from src.cheval.models.models import Match, CodeNameLinkAction
 
 class MatchParser:
 

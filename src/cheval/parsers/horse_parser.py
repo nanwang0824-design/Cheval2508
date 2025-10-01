@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 from bs4.element import Tag
 
 from utils import minsec_to_sec, extract_class_race, extract_class_jockey, extract_dd_horse, extract_dd_trainer
-from models import Horse, ResultOfHorse
+from src.cheval.models.models import Horse, ResultOfHorse
 
 class HorseParser:
     def __init__(self):

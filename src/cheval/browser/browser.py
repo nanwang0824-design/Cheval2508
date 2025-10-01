@@ -10,7 +10,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.ui import WebDriverWait
 
-from waiter import Waiter
+from src.cheval.browser.waiter import Waiter
 
 class Browser:
     def __init__(self):

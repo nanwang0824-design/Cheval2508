@@ -2,9 +2,9 @@
 
 import random
 
-from browser import Browser
-from navigator import Navigator
-from parsers import Parsers
+from src.cheval.browser.browser import Browser
+from src.cheval.browser.navigator import Navigator
+from src.cheval.parsers import MatchListParser, MatchParser, RaceParser, HorseParser, JockeyParser, TrainerParser
 
 def main():
     browser = Browser()

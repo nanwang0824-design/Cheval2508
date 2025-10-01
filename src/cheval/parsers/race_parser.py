@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 
 from utils import extract_doaction_code
 
-from models import Race, Prize, ResultOfRace
+from src.cheval.models.models import Race, Prize, ResultOfRace
 
 class RaceParser:
 

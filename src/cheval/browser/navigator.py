@@ -5,7 +5,7 @@ import inspect
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 
-from browser import Browser
+from src.cheval.browser.browser import Browser
 
 class Navigator:
     def __init__(self, browser: Browser):

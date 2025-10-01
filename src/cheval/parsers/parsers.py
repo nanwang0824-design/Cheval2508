@@ -1,4 +1,4 @@
-# parsers
+# parsers.py
 
 from parsers.match_list_parser import MatchListParser
 from parsers.match_parser import MatchParser
