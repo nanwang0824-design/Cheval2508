@@ -1,1 +1,2 @@
-Scrape the data from JRA
+Scrape data from JRA
+Not finished
