@@ -8,19 +8,24 @@ from bs4 import BeautifulSoup
 from bs4.element import Tag
 
 from ..utils.misc import extract_doaction_code
-from ..models.models import Match, CodeNameLinkAction
+from ..models.models import Match, CodeNameLinkAction, DataType
+from .base import BaseParser, ParseResult
 
-class MatchParser:
+class MatchParser(BaseParser):
+    data_type = DataType.MATCH
+    parser_name = data_type.value
 
+    """
     def __init__(self):
         pass
+    """
 
-    def parse(self, html: str, match_code: str = None, return_links: bool = True):
-        """read the html string of a match, and save the informations;
-        return the links of races and odds if return_links=True"""
+    def _parse_impl(self, html: str, entity_code: str = None, entity_name: str = None):
+        """read the html string of a match, and save the informations"""
 
         links_of_races: List[CodeNameLinkAction] = []
         links_of_odds: List[CodeNameLinkAction] = []
+        parse_result = ParseResult[Match]()
 
         soup = BeautifulSoup(html, "html.parser")
 
@@ -29,7 +34,7 @@ class MatchParser:
         name = temp.get_text(strip=True).split("）")[-1].strip()
         date = datetime.strptime(temp.get_text(strip=True).split("（")[0].strip(), "%Y年%m月%d日")
         
-        thematch = Match(code=match_code, date=date, name=name)
+        thematch = Match(code=entity_code, date=date, name=name)
 
         # read the table of races
         races: List[Tag] = list(soup.select("tbody tr"))
@@ -38,18 +43,18 @@ class MatchParser:
             race_name = race.select_one("td.race_name").get_text(strip=True)
             race_link = str(race.select_one("th.race_num a")["href"])
             race_code = race_link.replace("/JRADB/accessS.html?CNAME=", "")
-            if return_links:
-                links_of_races.append(CodeNameLinkAction(code=race_code, name=race_name, link=race_link))
-            thematch.races.append(race_code)
+            links_of_races.append(CodeNameLinkAction(thetype=DataType.RACE, code=race_code, name=race_name, link=race_link))
+            thematch.races[race_code] = race_name
             odds_action = race.select_one("td.odds a")["onclick"]
             odds_code = extract_doaction_code(odds_action)
-            if return_links:
-                links_of_odds.append(CodeNameLinkAction(code=odds_code, name=race_name, action=odds_action))
-                #links_of_odds[odds_code] = odds_action
+            links_of_odds.append(CodeNameLinkAction(thetype=DataType.ODDS, code=odds_code, name=race_name, action=odds_action))
+            #links_of_odds[odds_code] = odds_action
             
 
-        return thematch, links_of_races, links_of_odds
-
+        parse_result.entity = thematch
+        parse_result.links[DataType.RACE] = links_of_races
+        parse_result.links[DataType.ODDS] = links_of_odds
+        return parse_result
 
         
         

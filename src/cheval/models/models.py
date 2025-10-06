@@ -3,44 +3,70 @@
 import re
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import List, Optional
+from enum import Enum, auto, unique
+from typing import Dict, List, Optional
 
 from ..utils.misc import order_str_to_int, sexage_to_sex_age
 
+@unique
+class DataType(Enum):
+    """type of the data"""
+    BASE = "base"
+    FAILED = "failed"
+    MATCH_LIST = "match_list"
+    MATCH = "match"
+    RACE = "race"
+    HORSE = "horse"
+    JOCKEY = "jockey"
+    JOCKEY_SUMMARY = "jockey_summary"
+    TRAINER = "trainer"
+    TRAINER_SUMMARY = "trainer_summary"
+    ODDS = "odds"
+
+def data_type_to_its_history(data_type: DataType):
+    match data_type:
+        case DataType.JOCKEY:
+            return DataType.JOCKEY_SUMMARY
+        case DataType.TRAINER:
+            return DataType.TRAINER_SUMMARY
+        case _:
+            return None
+
 @dataclass(slots=True, kw_only=True)
 class CodeNameLinkAction:
-    code: str = None
-    name: str = None
-    link: str = None
-    action: str = None
+    thetype: DataType
+    code: Optional[str] = None
+    name: Optional[str] = None
+    link: Optional[str] = None
+    action: Optional[str] = None
 
 @dataclass(slots=True, kw_only=True)
 class SummaryOfJockeyTrainer:
-    title: str = None
+    title: Optional[str] = None
     "title of the summary table: 本年成績, 累計成績, 2024年, ..."
-    type: str = None
+    type: Optional[str] = None
     "type of the summary table: 平地, 障害, JRA合計, 地方, 海外, 総合計"
-    num_no1: int = None
+    num_no1: Optional[int] = None
     "1着, number of no 1"
-    num_no2: int = None
+    num_no2: Optional[int] = None
     "2着, number of no 2"
-    num_no3: int = None
+    num_no3: Optional[int] = None
     "3着, number of no 3"
-    num_no4: int = None
+    num_no4: Optional[int] = None
     "4着, number of no 4"
-    num_no5: int = None
+    num_no5: Optional[int] = None
     "5着, number of no 5"
-    num_out5: int = None
+    num_out5: Optional[int] = None
     "着外, number of outside the top 5"
-    num_rides: int = None
+    num_rides: Optional[int] = None
     "騎乗回数, number of rides"
-    winning_rate: float = None
+    winning_rate: Optional[float] = None
     "勝率, winning rate"
-    quinella_rate: float = None
+    quinella_rate: Optional[float] = None
     "連対率, quinella rate"
-    top3_rate: float = None
+    top3_rate: Optional[float] = None
     "3着内率, top 3 rate"
-    update_time: datetime = None
+    update_time: Optional[datetime] = None
     "date and time of update"
 
     def __post_init__(self):
@@ -48,23 +74,23 @@ class SummaryOfJockeyTrainer:
 
 @dataclass(slots=True, kw_only=True)
 class Trainer:
-    code: str = None
+    code: Optional[str] = None
     "code of the trainer"
-    name: str = None
+    name: Optional[str] = None
     "name of trainer"
-    name_kana: str = None
+    name_kana: Optional[str] = None
     "kana name of trainer"
-    birth_date: datetime = None
+    birth_date: Optional[datetime] = None
     "生年月日, birthday of the trainer"
-    birth_place: str = None
+    birth_place: Optional[str] = None
     "出身地, birth place of the trainer"
-    license_acquisition_year: int = None
+    license_acquisition_year: Optional[int] = None
     "免許取得年, license acquisition year of the trainer"
-    affiliation: str = None
+    affiliation: Optional[str] = None
     "所属, affiliation of the trainer"
-    first_race: str = None
+    first_race: Optional[str] = None
     "初出走, first race of the trainer"
-    first_victory: str = None
+    first_victory: Optional[str] = None
     "初勝利, first victory of the trainer"
     summary_this_year: List[SummaryOfJockeyTrainer] = field(default_factory=list)
     "summary of the results in this year"
@@ -72,7 +98,7 @@ class Trainer:
     "summary of the total results"
     summary_past: List[SummaryOfJockeyTrainer] = field(default_factory=list)
     "summary of the past results"
-    update_time: datetime = None
+    update_time: Optional[datetime] = None
     "date and time of update"
 
     def __post_init__(self):
@@ -80,37 +106,37 @@ class Trainer:
 
 @dataclass(slots=True, kw_only=True)
 class Jockey:
-    code: str = None
+    code: Optional[str] = None
     "code of the jockey, example: pw04kmk001144/54"
-    name: str = None
+    name: Optional[str] = None
     "name of jockey"
-    name_kana: str = None
+    name_kana: Optional[str] = None
     "kana name of jockey"
-    birth_date: datetime = None
+    birth_date: Optional[datetime] = None
     "生年月日, birthday of the jockey"
-    height: float = None
+    height: Optional[float] = None
     "身長, height of the jockey"
-    height_unit: str = None
+    height_unit: Optional[str] = None
     "height unit of the jockey, センチメートル"
-    weight: float = None
+    weight: Optional[float] = None
     "体重, weight of the jockey"
-    weight_unit: str = None
+    weight_unit: Optional[str] = None
     "weight unit of the jockey, キログラム"
-    blood_type: str = None
+    blood_type: Optional[str] = None
     "blood type of the jockey"
-    first_license_year: int = None
+    first_license_year: Optional[int] = None
     "初免許年, first license year of the jockey"
-    license_type: str = None
+    license_type: Optional[str] = None
     "免許種類, license type of the jockey"
-    birth_place: str = None
+    birth_place: Optional[str] = None
     "出身地, birth place of the jockey"
-    affiliation: str = None
+    affiliation: Optional[str] = None
     "所属, affiliation of the jockey"
-    affiliated_stable: str = None
+    affiliated_stable: Optional[str] = None
     "所属厩舎, affiliated stable of the jockey"
-    first_ride: str = None
+    first_ride: Optional[str] = None
     "初騎乗, first ride of the jockey"
-    first_victory: str = None
+    first_victory: Optional[str] = None
     "初勝利, first victory of the jockey"
     summary_this_year: List[SummaryOfJockeyTrainer] = field(default_factory=list)
     "summary of the results in this year"
@@ -118,7 +144,7 @@ class Jockey:
     "summary of the total results"
     summary_past: List[SummaryOfJockeyTrainer] = field(default_factory=list)
     "summary of the past results"
-    update_time: datetime = None
+    update_time: Optional[datetime] = None
     "date and time of update"
 
     def __post_init__(self):
@@ -126,39 +152,39 @@ class Jockey:
 
 @dataclass(slots=True, kw_only=True)
 class ResultOfHorse:
-    date: datetime = None
+    date: Optional[datetime] = None
     "年月日, date of the race"
-    place: str = None
+    place: Optional[str] = None
     "場, place of the race"
-    name: str = None
+    name: Optional[str] = None
     "レース名, name of the race"
-    code: str = None
+    code: Optional[str] = None
     "code of the race, may be an empty string"
-    surface_distance: str = None
+    surface_distance: Optional[str] = None
     "距離, surface and distance of the race, example: 芝2000, 芝ダ2910"
-    condition: str = None
+    condition: Optional[str] = None
     "馬場, condition of the surface, example: 稍重, 良/良"
-    num_of_horses: int = None
+    num_of_horses: Optional[int] = None
     "頭数, number of horses in the race"
-    pop: int = None
+    pop: Optional[int] = None
     "人気, win popularity of the horse"
-    arrival_order_str: str = None
+    arrival_order_str: Optional[str] = None
     "着順, string of the arrival order"
-    arrival_order: int = None
+    arrival_order: Optional[int] = None
     "着順, arrival order, initialization is not necessary"
-    jockey_code: str = None
+    jockey_code: Optional[str] = None
     "code of the jockey"
-    jockey_name: str = None
+    jockey_name: Optional[str] = None
     "騎手名, name of the jockey"
-    weight: float = None
+    weight: Optional[float] = None
     "負担重量, weight to carry of the horse"
-    horse_weight: float = None
+    horse_weight: Optional[float] = None
     "馬体重, horse weight"
-    time: float = None
+    time: Optional[float] = None
     "タイム, race time"
-    rt: str = None
+    rt: Optional[str] = None
     "Rt, may be an empty string"
-    update_time: datetime = None
+    update_time: Optional[datetime] = None
     "date and time of update"
 
     def normalize(self):
@@ -171,61 +197,61 @@ class ResultOfHorse:
 
 @dataclass(slots=True, kw_only=True)
 class Horse:
-    code: str = None
+    code: Optional[str] = None
     "code of the horse, example: pw01dud102022104401/B0"
-    name: str = None
+    name: Optional[str] = None
     "馬名, name of the horse"
-    name_en: str = None
+    name_en: Optional[str] = None
     "english name of the horse"
-    rest: str = None
+    rest: Optional[str] = None
     "rest state of the horse, may be an empty string, expamle: 放牧"
-    father_code: str = None
+    father_code: Optional[str] = None
     "code of the father of the horse, may be an empty string"
-    father_name: str = None
+    father_name: Optional[str] = None
     "父, name of the father of the horse"
-    mother_code: str = None
+    mother_code: Optional[str] = None
     "code of the mother of the horse, may be an empty string"
-    mother_name: str = None
+    mother_name: Optional[str] = None
     "母, name of the mother of the horse"
-    father_of_mother_code: str = None
+    father_of_mother_code: Optional[str] = None
     "code of the father of mother of the horse, may be an empty string"
-    father_of_mother_name: str = None
+    father_of_mother_name: Optional[str] = None
     "母の父, name of the father of mother of the horse"
-    mother_of_mother_code: str = None
+    mother_of_mother_code: Optional[str] = None
     "code of the mother of mother of the horse, may be an empty string"
-    mother_of_mother_name: str = None
+    mother_of_mother_name: Optional[str] = None
     "母の母, name of the mother of mother of the horse"
-    sex: str = None
+    sex: Optional[str] = None
     "性別, sex of the horse"
-    birth_date: datetime = None
+    birth_date: Optional[datetime] = None
     "生年月日, birthday of the horse"
-    color: str = None
+    color: Optional[str] = None
     "毛色, color"
-    owner: str = None
+    owner: Optional[str] = None
     "馬主名, owner of the horse"
-    trainer_code: str = None
+    trainer_code: Optional[str] = None
     "code of trainer"
-    trainer_name: str = None
+    trainer_name: Optional[str] = None
     "調教師名, name of trainer"
-    trainer_affiliation: str = None
+    trainer_affiliation: Optional[str] = None
     "place of trainer"
-    birth_place: str = None
+    birth_place: Optional[str] = None
     "生産牧場, birth place of the horse"
-    prize_total: int = None
+    prize_total: Optional[int] = None
     "総賞金, the default unit of prize is 円"
-    prize_fujia: int = None
+    prize_fujia: Optional[int] = None
     "付加賞"
-    prize_difang: int = None
+    prize_difang: Optional[int] = None
     "地方賞金"
-    prize_haiwai: int = None
+    prize_haiwai: Optional[int] = None
     "海外賞金"
-    prize_pingdi: int = None
+    prize_pingdi: Optional[int] = None
     "収得賞金（平地）"
-    prize_zhanghai: int = None
+    prize_zhanghai: Optional[int] = None
     "収得賞金（障害）"
     results: List[ResultOfHorse] = field(default_factory=list)
     "result of the horse"
-    update_time: datetime = None
+    update_time: Optional[datetime] = None
     "date and time of update"
 
     def __post_init__(self):
@@ -233,61 +259,61 @@ class Horse:
 
 @dataclass(slots=True, kw_only=True)
 class ResultOfRace:
-    race_code: str = None
+    race_code: Optional[str] = None
     "code of the race"
-    arrival_order_str: str = None
+    arrival_order_str: Optional[str] = None
     "着順, string of the arrival order"
-    arrival_order: int = None
+    arrival_order: Optional[int] = None
     "着順, arrival order, initialization is not necessary"
-    waku: int = None
+    waku: Optional[int] = None
     "枠 or 枠番, number of gate"
-    waku_color: str = None
+    waku_color: Optional[str] = None
     "color of 枠"
-    num: int = None
+    num: Optional[int] = None
     "馬番, index of the horse"
-    horse_code: str = None
+    horse_code: Optional[str] = None
     "index of the horse"
-    #horse_link: str = None
+    #horse_link: Optional[str] = None
     #"link of the horse"
-    horse_name: str = None
+    horse_name: Optional[str] = None
     "馬名, name of the horse"
-    horse_icon: str = None
+    horse_icon: Optional[str] = None
     "競走馬に付く記号, icon of the horse, example: マルチ, ..."
     blinker: bool = None
     "ブリンカー, whether the horse wears blinkers"
-    sex_and_age: str = None
+    sex_and_age: Optional[str] = None
     "性齢, sex and age of the horse, example: 牝3 or 牡5 or せん6"
-    sex: str = None
+    sex: Optional[str] = None
     "sex of the horse, value: 牝 or 牡 or せん, initialization is not necessary"
-    age_year: int = None
+    age_year: Optional[int] = None
     "age of the horse, counting by year, initialization is not necessary"
-    age_day: int = None
+    age_day: Optional[int] = None
     "age of the horse, counting by day, initialization is not necessary"
-    weight: float = None
+    weight: Optional[float] = None
     "負担重量, weight to carry of the horse"
-    jockey_code: str = None
+    jockey_code: Optional[str] = None
     "code of the jockey"
-    jockey_name: str = None
+    jockey_name: Optional[str] = None
     "騎手名, name of the jockey"
-    time: float = None
+    time: Optional[float] = None
     "タイム, race time"
-    margin: str = None
+    margin: Optional[str] = None
     "着差, margin"
     corner_list: List[Optional[int]] = field(default_factory=list)
     "コーナー通過順位, orders of passing each corner"
-    f_time: float = None
+    f_time: Optional[float] = None
     "推定上り or 平均1F"
-    horse_weight: float = None
+    horse_weight: Optional[float] = None
     "馬体重, horse weight"
-    horse_weight_delta: float = None
+    horse_weight_delta: Optional[float] = None
     "馬体重増減, gain/loss of horse weight"
-    trainer_code: str = None
+    trainer_code: Optional[str] = None
     "code of trainer"
-    trainer_name: str = None
+    trainer_name: Optional[str] = None
     "調教師名, name of trainer"
-    pop: int = None
+    pop: Optional[int] = None
     "単勝人気, win popularity of the horse"
-    update_time: datetime = None
+    update_time: Optional[datetime] = None
     "date and time of update"
 
     def normalize(self):
@@ -307,54 +333,54 @@ class ResultOfRace:
 @dataclass(slots=True, kw_only=True)
 class Prize:
     "賞金"
-    name: str = None
+    name: Optional[str] = None
     "name of the prize, example: 本賞金, 付加賞"
-    unit: str = None
+    unit: Optional[str] = None
     "unit of the prize, example: 万円"
     data: List[float] = field(default_factory=list)
     "prize for 1着, 2着, ..."
 
 @dataclass(slots=True, kw_only=True)
 class Race:
-    code: str = None
+    code: Optional[str] = None
     'code of the race, obtained from list of races, example: pw01sde1006202405020420241201/59'
-    name: str = None
+    name: Optional[str] = None
     'レース名, name of a race, obtained from list of races, example: 2歳新馬（混合）［指定］'
-    title: str = None
+    title: Optional[str] = None
     'title of a race (part of レース名), may be an empty string, example: メイクデビュー中山'
-    index: int = None
+    index: Optional[int] = None
     "one-based index of a race in a match, ordered by start time"
-    distance: int = None
+    distance: Optional[int] = None
     '距離, distance of the race'
-    distance_unit: str = None
+    distance_unit: Optional[str] = None
     'unit of distance (part of 距離), maybe always メートル'
-    surface: str = None
+    surface: Optional[str] = None
     '馬場, surface of the track, value: ダート, 芝, or something like 芝→ダート'
-    number_horses_in_race: int = None
+    number_horses_in_race: Optional[int] = None
     '出走頭数, how many horse in the race'
-    time: datetime = None
+    time: Optional[datetime] = None
     'start time of the race'
-    weather: str = None
+    weather: Optional[str] = None
     '天候, weather'
-    turf_condition: str = None
+    turf_condition: Optional[str] = None
     "condition of the turf track, conditions of turf and dirt tracks may occur together when the surface is something like 芝→ダート"
-    dirt_condition: str = None
+    dirt_condition: Optional[str] = None
     "condition of the dirt track, conditions of turf and dirt tracks may occur together when the surface is something like 芝→ダート"
-    category: str = None
+    category: Optional[str] = None
     'div class="cell category" part of レース条件, example: 2歳'
-    theclass: str = None
+    theclass: Optional[str] = None
     'div class="cell class" part of レース条件, example: 新馬'
-    rule: str = None
+    rule: Optional[str] = None
     'div class="cell rule" part of レース条件, example: （混合）［指定］'
-    weight: str = None
+    weight: Optional[str] = None
     'div class="cell weight" part of レース条件, example: 馬齢'
-    course_detail: str = None
+    course_detail: Optional[str] = None
     'span class="detail" part of レース条件, example: （芝・右）'
     prize_list: List[Prize] = field(default_factory=list)
     "prize of the race"
     result_list: List[ResultOfRace] = field(default_factory=list)
     "results of the race"
-    update_time: datetime = None
+    update_time: Optional[datetime] = None
     "date and time of update"
 
     def __post_init__(self):
@@ -362,13 +388,13 @@ class Race:
 
 @dataclass(slots=True, kw_only=True)
 class Match:
-    code: str = None
+    code: Optional[str] = None
     "unique code of the match, example: pw01srl10062024050220241201/6F"
-    date: datetime = None
+    date: Optional[datetime] = None
     "date (year, month, day) of the match"
-    name: str = None
+    name: Optional[str] = None
     "name of the match, example: 5回中山2日"
-    number_races_in_match: int = None
+    number_races_in_match: Optional[int] = None
     "how many races in the match"
     kai: int = field(init=False)
     "5 of 5回中山2日"
@@ -376,9 +402,9 @@ class Match:
     "中山 of 5回中山2日"
     nichi: str = field(init=False)
     "2 of 5回中山2日"
-    races: List[str] = field(default_factory=list)
-    "list of race codes in the match"
-    update_time: datetime = None
+    races: Dict[str, str] = field(default_factory=dict)
+    "dict of races (code: name) in the match"
+    update_time: Optional[datetime] = None
     "date and time of update"
 
     def normalize(self):

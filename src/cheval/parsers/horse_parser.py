@@ -2,23 +2,29 @@
 
 import re
 from datetime import datetime
-from typing import Dict
+from typing import Dict, List
 
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 
 from ..utils.misc import minsec_to_sec, extract_class_race, extract_class_jockey, extract_dd_horse, extract_dd_trainer
-from ..models.models import Horse, ResultOfHorse
+from ..models.models import Horse, ResultOfHorse, DataType
+from .base import BaseParser, ParseResult
 
-class HorseParser:
+class HorseParser(BaseParser):
+    data_type = DataType.HORSE
+    parser_name = data_type.value
+
+    """
     def __init__(self):
         pass
+    """
 
-    def parse(self, html: str, horse_code: str = None):
-        """read the html string of a horse page,
-        return the Horse instance that records the information read"""
+    def _parse_impl(self, html: str, entity_code: str = None, entity_name: str = None):
+        """read the html string of a horse page"""
 
         soup = BeautifulSoup(html, "html.parser")
+        parse_result = ParseResult[Horse]()
 
         # read the name of horse
         temp = soup.select_one("div.header_line.no-mb span.txt")
@@ -31,8 +37,8 @@ class HorseParser:
             name = name.replace(rest, "")
 
         # read the table of baisc informations
-        temp = soup.select("div.profile.mt20 li")
-        for item in temp:
+        temps: List[Tag] = list(soup.select("div.profile.mt20 li"))
+        for item in temps:
             value = item.select_one("dd").get_text(strip=True)
             key = item.get_text(strip=True).replace(value, "")
             match key:
@@ -58,8 +64,8 @@ class HorseParser:
                     birth_place = value
 
         # read the table of prize
-        temp = soup.select("div.prize.mt10 li.div2")
-        for item in temp:
+        temps: List[Tag] = list(soup.select("div.prize.mt10 li.div2"))
+        for item in temps:
             key = item.select_one("dt").get_text(strip=True)
             unit = item.select_one("dd span").get_text(strip=True)
             assert (unit == "円"), f"the unit of prize for {key} is not 円"
@@ -85,7 +91,7 @@ class HorseParser:
                     """self.basic_info.set_info(horse_prize_zhanghai=int(value))"""
 
         # define the horse
-        horse = Horse(code=horse_code, name=name, name_en=name_en, rest=rest, father_code=father_code, father_name=father_name, mother_code=mother_code, mother_name=mother_name, father_of_mother_code=father_of_mother_code, father_of_mother_name=father_of_mother_name, mother_of_mother_code=mother_of_mother_code, mother_of_mother_name=mother_of_mother_name, sex=sex, birth_date=birth_date, color=color, owner=owner, trainer_code=trainer_code, trainer_name=trainer_name, trainer_affiliation=trainer_affiliation, birth_place=birth_place, prize_total=prize_total, prize_fujia=prize_fujia, prize_difang=prize_difang, prize_haiwai=prize_haiwai, prize_pingdi=prize_pingdi, prize_zhanghai=prize_zhanghai)
+        horse = Horse(code=entity_code, name=name, name_en=name_en, rest=rest, father_code=father_code, father_name=father_name, mother_code=mother_code, mother_name=mother_name, father_of_mother_code=father_of_mother_code, father_of_mother_name=father_of_mother_name, mother_of_mother_code=mother_of_mother_code, mother_of_mother_name=mother_of_mother_name, sex=sex, birth_date=birth_date, color=color, owner=owner, trainer_code=trainer_code, trainer_name=trainer_name, trainer_affiliation=trainer_affiliation, birth_place=birth_place, prize_total=prize_total, prize_fujia=prize_fujia, prize_difang=prize_difang, prize_haiwai=prize_haiwai, prize_pingdi=prize_pingdi, prize_zhanghai=prize_zhanghai)
 
         # find the table "出走レース"
         result_table = soup.select_one("table.basic.narrow-xy.striped")
@@ -112,4 +118,5 @@ class HorseParser:
             result = ResultOfHorse(date=date, place=place, name=name, code=code, surface_distance=surface_distance, condition=condition, num_of_horses=num_of_horses, pop=pop, arrival_order_str=arrival_order_str, jockey_code=jockey_code, jockey_name=jockey_name, weight=weight, horse_weight=horse_weight, time=time, rt=rt)
             horse.results.append(result)
 
-        return horse
+        parse_result.entity = horse
+        return parse_result

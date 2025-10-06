@@ -7,17 +7,23 @@ from typing import Dict, List, Optional
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 
-from ..models.models import Jockey, SummaryOfJockeyTrainer
+from ..models.models import Jockey, SummaryOfJockeyTrainer, DataType
+from .base import BaseParser, ParseResult
 
-class JockeyParser:
+class JockeyParser(BaseParser):
+    data_type = DataType.JOCKEY
+    parser_name = data_type.value
+
+    """
     def __init__(self):
         pass
+    """
 
-    def parse(self, html: str, jockey_code: str = None):
-        """read the html string of a jockey page,
-        return the Jockey instance that records the information read"""
+    def _parse_impl(self, html: str, entity_code: str = None, entity_name: str = None):
+        """read the html string of a jockey page"""
 
         soup = BeautifulSoup(html, "html.parser")
+        parse_result = ParseResult[Jockey]()
 
         # read the name of jockey
         temp = soup.select_one("div.header_line.no-mb span.txt")
@@ -57,7 +63,7 @@ class JockeyParser:
                     first_victory = value.get_text(strip=True)
 
         # define the jockey
-        jockey = Jockey(code=jockey_code, name=name, name_kana=name_kana, birth_date=birth_date, height=height, height_unit=height_unit, weight=weight, weight_unit=weight_unit, blood_type=blood_type, first_license_year=first_license_year, license_type=license_type, birth_place=birth_place, affiliation=affiliation, affiliated_stable=affiliated_stable, first_ride=first_ride, first_victory=first_victory)
+        jockey = Jockey(code=entity_code, name=name, name_kana=name_kana, birth_date=birth_date, height=height, height_unit=height_unit, weight=weight, weight_unit=weight_unit, blood_type=blood_type, first_license_year=first_license_year, license_type=license_type, birth_place=birth_place, affiliation=affiliation, affiliated_stable=affiliated_stable, first_ride=first_ride, first_victory=first_victory)
 
         # read the table of year_record 本年成績
         temp = soup.select_one("#year_record")
@@ -67,11 +73,11 @@ class JockeyParser:
         temp = soup.select_one("#total_record")
         jockey.summary_total = self._read_summary_table(temp)
 
-        return jockey
+        parse_result.entity = jockey
+        return parse_result
 
     def parse_for_past(self, html: str):
-        """read the html string of a jockey past results page,
-        return the list of SummaryOfJockeyTrainer instances that records the information read"""
+        """read the html string of a jockey past results page"""
 
         soup = BeautifulSoup(html, "html.parser")
 
@@ -83,7 +89,8 @@ class JockeyParser:
 
         return results
 
-    def _read_summary_table(self, tag: Tag, append_list: List[SummaryOfJockeyTrainer] = None, append: bool = False):
+    @staticmethod
+    def _read_summary_table(tag: Tag, append_list: List[SummaryOfJockeyTrainer] = None, append: bool = False):
         results: List[SummaryOfJockeyTrainer] = []
         title = tag.select_one("div.main").get_text(strip=True)
         for row in tag.select("tr"):
@@ -97,3 +104,27 @@ class JockeyParser:
             if append and (append_list is not None):
                 append_list.append(summary)
         return results
+
+class JockeySummaryParser(BaseParser):
+    data_type = DataType.JOCKEY_SUMMARY
+    parser_name = data_type.value
+
+    """
+    def __init__(self):
+        pass
+    """
+
+    def _parse_impl(self, html: str, entity_code: str = None, entity_name: str = None):
+        """read the html string of a jockey summary page"""
+
+        soup = BeautifulSoup(html, "html.parser")
+        parse_result = ParseResult[SummaryOfJockeyTrainer]()
+
+        results: List[SummaryOfJockeyTrainer] = []
+
+        tables = soup.select("table.basic.narrow.mt15, table.basic.narrow.mt40")
+        for table in tables:
+            JockeyParser._read_summary_table(tag=table, append_list=results, append=True)
+
+        parse_result.history = results
+        return parse_result

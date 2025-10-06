@@ -29,5 +29,5 @@ def minify_html(html: str, filename: str ="minified_html.html"):
     return compressed
 
 if __name__ == "__main__":
-  html = html.html_match_list_2
+  html = html.html_match_list_1
   minify_html(html)

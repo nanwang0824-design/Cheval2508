@@ -8,20 +8,24 @@ from bs4 import BeautifulSoup
 from bs4.element import Tag
 
 from ..utils.misc import extract_doaction_code
-from ..models.models import CodeNameLinkAction
+from ..models.models import CodeNameLinkAction, DataType
+from .base import BaseParser, ParseResult
 
-#from models import Match
+class MatchListParser(BaseParser):
+    data_type = DataType.MATCH_LIST
+    parser_name = data_type.value
 
-class MatchListParser:
-
+    """
     def __init__(self):
         pass
+    """
 
-    def parse(self, html: str, return_links: bool = True):
+    def _parse_impl(self, html: str, entity_code: str = None, entity_name: str = None) -> ParseResult[None]:
         """read the html string of a match list, and save the informations;
         return the links of matches if return_links=True"""
 
         links_of_matches: List[CodeNameLinkAction] = []
+        parse_result = ParseResult[None]()
 
         soup = BeautifulSoup(html, "html.parser")
 
@@ -31,6 +35,8 @@ class MatchListParser:
             name = thematch.get_text(strip=True)
             action = str(thematch["onclick"])
             code = extract_doaction_code(action)
-            links_of_matches.append(CodeNameLinkAction(code=code, name=name, action=action))
+            links_of_matches.append(CodeNameLinkAction(thetype=DataType.MATCH, code=code, name=name, action=action))
 
-        return links_of_matches
+        parse_result.links[DataType.MATCH] = links_of_matches
+
+        return parse_result

@@ -1,7 +1,15 @@
 # utils.py
 
 import re
-from typing import List, Tuple
+from typing import List, Tuple, Optional
+
+def safe_dir(dirname: Optional[str]):
+    """transform a dir to safe form"""
+    if dirname is None:
+        newdirname = "NoName"
+    else:
+        newdirname = dirname.replace("/", "_").replace(":", "_")
+    return newdirname
 
 def order_str_to_int(order_str: str):
     """transform the string of arrival order to int"""

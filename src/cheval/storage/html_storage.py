@@ -1,34 +1,25 @@
 # html_storage.py
 
 import os
-from enum import Enum, auto, unique
+from datetime import datetime
+from typing import Optional
 
 import gzip
 
-from datetime import datetime
-
-@unique
-class HTMLType(Enum):
-    """type of the HTML page"""
-    MATCH_LIST = auto()
-    MATCH = auto()
-    RACE = auto()
-    HORSE = auto()
-    JOCKEY = auto()
-    JOCKEY_HISTORY = auto()
-    TRAINER = auto()
-    TRAINER_HISTORY = auto()
+from ..models.models import DataType
+from ..config import DIR_FOR_SAVE_HTML
+from ..utils.misc import safe_dir
 
 class HTMLStorage:
     """
     Store HTML pages and automatically organizing directories and file naming.
     """
 
-    def __init__(self, root_dir="html"):
+    def __init__(self, root_dir=DIR_FOR_SAVE_HTML):
         self.root_dir = root_dir
     
-    def save_html(self, page_type: HTMLType, code: str, html: str,
-              url: str = None, metadata: dict = None, keep_history=True):
+    def save_html(self, page_type: DataType, code: str, html: str,
+              url: str = None, metadata: dict = None, keep_history: Optional[bool] = None):
         """
         Save HTML pages as gzip files and log additional information.
         Parameters:
@@ -39,15 +30,23 @@ class HTMLStorage:
         - metadata: other metadata (optional)
         - keep_history: whether to retain historical snapshots
         """
-        subdir = os.path.join(self.root_dir, self._map_page_type(page_type))
+        if keep_history is None:
+            if page_type in [DataType.MATCH_LIST, DataType.MATCH, DataType.RACE]:
+                keep_history = False
+            else:
+                keep_history = True
+
+        #subdir = os.path.join(self.root_dir, self._map_page_type(page_type))
+        subdir = os.path.join(self.root_dir, page_type.value)
         os.makedirs(subdir, exist_ok=True)
 
-        filename = self._make_filename(code, keep_history)
+        filename = self._make_filename(safe_dir(code), keep_history)
         filepath = os.path.join(subdir, filename)
 
         with gzip.open(filepath, "wt", encoding="utf-8") as f:
             f.write(html)
 
+        """
         # 预留扩展：记录索引信息
         record = {
             "page_type": page_type,
@@ -59,21 +58,21 @@ class HTMLStorage:
         }
         # 这里先写到控制台，未来可改写成 CSV/JSON/SQLite
         print("Saved record:", record)
+        """
 
         return filepath
 
-
-    def _map_page_type(self, page_type: HTMLType) -> str:
+    def _map_page_type(self, page_type: DataType) -> str:
         """映射页面类型到子目录"""
         mapping = {
-            HTMLType.MATCH_LIST: "matche_lists",
-            HTMLType.MATCH: "matches",
-            HTMLType.RACE: "races",
-            HTMLType.HORSE: "horses",
-            HTMLType.JOCKEY: "jockeys",
-            HTMLType.JOCKEY_HISTORY: "jockey_histories",
-            HTMLType.TRAINER: "trainers",
-            HTMLType.TRAINER_HISTORY: "trainer_histories",
+            DataType.MATCH_LIST: "matche_lists",
+            DataType.MATCH: "matches",
+            DataType.RACE: "races",
+            DataType.HORSE: "horses",
+            DataType.JOCKEY: "jockeys",
+            DataType.JOCKEY_SUMMARY: "jockey_histories",
+            DataType.TRAINER: "trainers",
+            DataType.TRAINER_SUMMARY: "trainer_histories",
         }
         if page_type not in mapping:
             raise ValueError(f"Unknown type of html page: {page_type}")

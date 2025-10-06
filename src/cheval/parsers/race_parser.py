@@ -8,20 +8,25 @@ from bs4 import BeautifulSoup
 from bs4.element import Tag
 
 from ..utils.misc import extract_doaction_code
-from ..models.models import Race, Prize, ResultOfRace, CodeNameLinkAction
+from ..models.models import Race, Prize, ResultOfRace, CodeNameLinkAction, DataType
+from .base import BaseParser, ParseResult
 
-class RaceParser:
+class RaceParser(BaseParser):
+    data_type = DataType.RACE
+    parser_name = data_type.value
 
+    """
     def __init__(self):
         pass
+    """
 
-    def parse(self, html: str, race_code: str = None, race_name: str = None, return_links: bool = True):
-        """read the html string of a race, and save the informations;
-        return the links of horses, jockeys and trainers if return_links=True"""
+    def _parse_impl(self, html: str, entity_code: str = None, entity_name: str = None):
+        """read the html string of a race, and save the informations"""
 
         links_of_horses: List[CodeNameLinkAction] = []
         links_of_jockeys: List[CodeNameLinkAction] = []
         links_of_trainers: List[CodeNameLinkAction] = []
+        parse_result = ParseResult[Race]()
 
         soup = BeautifulSoup(html, "html.parser")
 
@@ -53,7 +58,7 @@ class RaceParser:
         # read the title of the race
         temp = soup.select_one("div.race_header div.race_title span.race_name")
         title = temp.get_text(strip=True)
-        if title == race_name:
+        if title == entity_name:
             title = ""
         
         # read the category of the race
@@ -83,7 +88,7 @@ class RaceParser:
         distance = int(''.join(temp.find_all(text=True, recursive=False)).strip().replace(",", ""))
         distance_unit = temp.select_one("span.unit").get_text(strip=True)
 
-        race = Race(code=race_code, name=race_name, title=title, index=index, distance=distance, distance_unit=distance_unit, surface=surface, number_horses_in_race=None, time=time, weather=weather, turf_condition=turf_condition, dirt_condition=dirt_condition, category=category, theclass=theclass, rule=rule, weight=weight, course_detail=course_detail)
+        race = Race(code=entity_code, name=entity_name, title=title, index=index, distance=distance, distance_unit=distance_unit, surface=surface, number_horses_in_race=None, time=time, weather=weather, turf_condition=turf_condition, dirt_condition=dirt_condition, category=category, theclass=theclass, rule=rule, weight=weight, course_detail=course_detail)
 
         """
         # write the informations obtained above
@@ -134,8 +139,7 @@ class RaceParser:
             horse_link = temp["href"] # if (temp and "href" in temp.attrs) else None
             horse_code = horse_link.split("=")[1]
             horse_name = temp.get_text(strip=True)
-            if return_links:
-                links_of_horses.append(CodeNameLinkAction(code=horse_code, name=horse_name, link=horse_link))
+            links_of_horses.append(CodeNameLinkAction(thetype=DataType.HORSE, code=horse_code, name=horse_name, link=horse_link))
             # 性齢
             sex_and_age = result.select_one("td.age").get_text(strip=True)
             # 負担重量
@@ -146,9 +150,7 @@ class RaceParser:
                 jockey_code = extract_doaction_code(temp["onclick"])
                 jockey_name = temp.get_text(strip=True)
                 jockey_action = temp["onclick"].replace("return ", "")
-                if return_links:
-                    links_of_jockeys.append(CodeNameLinkAction(code=jockey_code, name=jockey_name, action=jockey_action))
-                    #links_of_jockeys[jockey_code] = temp["onclick"].replace("return ", "")
+                links_of_jockeys.append(CodeNameLinkAction(thetype=DataType.JOCKEY, code=jockey_code, name=jockey_name, action=jockey_action))
             else:
                 jockey_code = None #BasicInfo.Result.JOCKEY_CODE_EMPTY
                 jockey_name = result.select_one("td.jockey").get_text(strip=True)
@@ -185,9 +187,7 @@ class RaceParser:
                 trainer_code = extract_doaction_code(temp["onclick"])
                 trainer_name = temp.get_text(strip=True)
                 trainer_action = temp["onclick"].replace("return ", "")
-                if return_links:
-                    links_of_trainers.append(CodeNameLinkAction(code=trainer_code, name=trainer_name, action=trainer_action))
-                    #links_of_trainers[trainer_code] = temp["onclick"].replace("return ", "")
+                links_of_trainers.append(CodeNameLinkAction(thetype=DataType.TRAINER, code=trainer_code, name=trainer_name, action=trainer_action))
             else:
                 trainer_code = None #BasicInfo.Result.TRAINER_CODE_EMPTY
                 trainer_name = result.select_one("td.trainer").get_text(strip=True)
@@ -201,7 +201,7 @@ class RaceParser:
             temp = result.select_one("td.horse span.horse_icon img")
             horse_icon = temp["alt"] if temp else None
 
-            race_result = ResultOfRace(race_code=race_code, arrival_order_str=arrival_order, waku=waku, waku_color=waku_color, num=num, horse_code=horse_code, horse_name=horse_name, horse_icon=horse_icon, blinker=blinker, sex_and_age=sex_and_age, weight=weight, jockey_code=jockey_code, jockey_name=jockey_name, time=time, margin=margin, corner_list=corner_list, f_time=f_time, horse_weight=horse_weight, horse_weight_delta=horse_weight_delta, trainer_code=trainer_code, trainer_name=trainer_name, pop=pop)
+            race_result = ResultOfRace(race_code=entity_code, arrival_order_str=arrival_order, waku=waku, waku_color=waku_color, num=num, horse_code=horse_code, horse_name=horse_name, horse_icon=horse_icon, blinker=blinker, sex_and_age=sex_and_age, weight=weight, jockey_code=jockey_code, jockey_name=jockey_name, time=time, margin=margin, corner_list=corner_list, f_time=f_time, horse_weight=horse_weight, horse_weight_delta=horse_weight_delta, trainer_code=trainer_code, trainer_name=trainer_name, pop=pop)
             #print(race_result)
             race.result_list.append(race_result)
 
@@ -232,4 +232,8 @@ class RaceParser:
 
         #print(race)
 
-        return race, links_of_horses, links_of_jockeys, links_of_trainers
+        parse_result.entity = race
+        parse_result.links[DataType.HORSE] = links_of_horses
+        parse_result.links[DataType.JOCKEY] = links_of_jockeys
+        parse_result.links[DataType.TRAINER] = links_of_trainers
+        return parse_result
