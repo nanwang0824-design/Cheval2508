@@ -42,6 +42,7 @@ class CodeNameLinkAction:
 
 @dataclass(slots=True, kw_only=True)
 class SummaryOfJockeyTrainer:
+    """used as the member of a list in Jockey and Trainer"""
     title: Optional[str] = None
     "title of the summary table: 本年成績, 累計成績, 2024年, ..."
     type: Optional[str] = None
@@ -156,6 +157,7 @@ class Jockey:
 
 @dataclass(slots=True, kw_only=True)
 class ResultOfHorse:
+    """Used as the member of a list in Horse"""
     date: Optional[datetime] = None
     "年月日, date of the race"
     place: Optional[str] = None
@@ -265,6 +267,7 @@ class Horse:
 
 @dataclass(slots=True, kw_only=True)
 class OddsTan:
+    """単勝オッズ, odds tan, used when parse the HTML of odds tan page, the data will be wrinten in ResultOfRace"""
     code: Optional[str] = None
     'code of the odds, obtained from list of races, example: pw151ou1008202401010120240106Z/F7'
     odds: Dict[int, Optional[float]] = field(default_factory=dict)
@@ -277,6 +280,7 @@ class OddsTan:
 
 @dataclass(slots=True, kw_only=True)
 class ResultOfRace:
+    """Used as the member of a list in Race"""
     race_code: Optional[str] = None
     "code of the race"
     arrival_order_str: Optional[str] = None
@@ -352,7 +356,7 @@ class ResultOfRace:
 
 @dataclass(slots=True, kw_only=True)
 class Prize:
-    "賞金"
+    """賞金, used as the member of some lists in Race"""
     name: Optional[str] = None
     "name of the prize, example: 本賞金, 付加賞"
     unit: Optional[str] = None

@@ -8,13 +8,10 @@ import datetime
 from dataclasses import dataclass, field
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
 
-from bs4 import BeautifulSoup
-
 from ..models.models import DataType, CodeNameLinkAction
 from ..storage.html_storage import HTMLStorage
 from ..config import DIR_FOR_SAVE_HTML
 from ..utils.logging import get_logger
-from ..utils.misc import safe_dir
 
 T = TypeVar("T")
 

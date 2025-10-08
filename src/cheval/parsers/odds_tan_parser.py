@@ -32,8 +32,6 @@ class OddsTanParser(BaseParser):
         temp = soup.select_one("table.basic.narrow-xy.tanpuku tbody")
         #print(temp.prettify())
         temps: List[Tag] = list(temp.select("tr"))
-        print(len(temps))
-        print(temps[0].prettify())
         for temp in temps:
             num = int(temp.select_one("td.num").get_text(strip=True))
             odds = float(temp.select_one("td.odds_tan").get_text(strip=True))
