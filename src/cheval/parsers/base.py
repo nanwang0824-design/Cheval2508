@@ -67,7 +67,7 @@ class BaseParser:
         except Exception as e:
             filepath = HTMLStorage(root_dir=root_dir_for_save).save_html(page_type=DataType.FAILED, code=entity_code, html=html, keep_history=keep_history)
             self.logger.exception(f"A fatal parser error in {inspect.currentframe().f_code.co_name} of {self.__class__}!")
-            self.logger.exception(f"Information: code={entity_code}, HTML file path={filepath}\n\tcontext: {context}")
+            self.logger.exception(f"Information: code={entity_code}, name={entity_name}, HTML file path={filepath}\n\tcontext: {context}")
             self.logger.exception(f"{str(e)}")
             raise e
 

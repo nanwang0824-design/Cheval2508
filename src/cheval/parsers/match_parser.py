@@ -47,13 +47,13 @@ class MatchParser(BaseParser):
             thematch.races[race_code] = race_name
             odds_action = race.select_one("td.odds a")["onclick"]
             odds_code = extract_doaction_code(odds_action)
-            links_of_odds.append(CodeNameLinkAction(thetype=DataType.ODDS, code=odds_code, name=race_name, action=odds_action))
+            links_of_odds.append(CodeNameLinkAction(thetype=DataType.ODDS_TAN, code=odds_code, name=race_name, action=odds_action))
             #links_of_odds[odds_code] = odds_action
             
 
         parse_result.entity = thematch
         parse_result.links[DataType.RACE] = links_of_races
-        parse_result.links[DataType.ODDS] = links_of_odds
+        parse_result.links[DataType.ODDS_TAN] = links_of_odds
         return parse_result
 
         

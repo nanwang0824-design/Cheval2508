@@ -33,7 +33,10 @@ def sexage_to_sex_age(sexage: str):
     
 def minsec_to_sec(minsec: str):
     temp = minsec.split(":")
-    return float(temp[0]) * 60 + float(temp[1])
+    if len(temp) == 2:
+        return float(temp[0]) * 60 + float(temp[1])
+    else:
+        return float(temp[0])
 
 def extract_class_race(html: str):
     """"""

@@ -7,7 +7,8 @@ from typing import Dict, List, Optional
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 
-from ..models.models import Trainer, SummaryOfJockeyTrainer, DataType
+from ..models.models import Trainer, SummaryOfJockeyTrainer, DataType, CodeNameLinkAction
+from ..utils.misc import extract_doaction_code
 from .base import BaseParser, ParseResult
 from .jockey_parser import JockeyParser
 
@@ -31,6 +32,7 @@ class TrainerParser(BaseParser):
         name_kana = temp.select_one("span.kana").get_text(strip=True)
         name = temp.get_text(strip=True).replace("調教師情報", "").replace(name_kana, "")
         name_kana = name_kana.replace("（", "").replace("）", "")
+        retired = True if temp.select_one("span.retired") else False
 
         # read the table of baisc informations
         temp = soup.select("div.main.mt15 div.profile div.data dl")
@@ -51,15 +53,23 @@ class TrainerParser(BaseParser):
                 case "初勝利":
                     first_victory = value.get_text(strip=True)
 
-        trainer = Trainer(code=entity_code, name=name, name_kana=name_kana, birth_date=birth_date, birth_place=birth_place, license_acquisition_year=license_acquisition_year, affiliation=affiliation, first_race=first_race, first_victory=first_victory)
+        trainer = Trainer(code=entity_code, name=name, name_kana=name_kana, retired=retired, birth_date=birth_date, birth_place=birth_place, license_acquisition_year=license_acquisition_year, affiliation=affiliation, first_race=first_race, first_victory=first_victory)
 
         # read the table of year_record 本年成績
         temp = soup.select_one("#year_record")
-        trainer.summary_this_year = self._read_summary_table(tag=temp)
+        if temp is not None:
+            trainer.summary_this_year = self._read_summary_table(tag=temp)
 
-        # read the table of year_record 本年成績
+        # read the table of year_record 累計成績
         temp = soup.select_one("#total_record")
-        trainer.summary_total = self._read_summary_table(temp)
+        if temp is not None:
+            trainer.summary_total = self._read_summary_table(temp)
+
+        # link to 過去成績
+        temp = soup.select_one("div.jockey_menu.mt30 li:has(a:-soup-contains('過去成績')) a")
+        summary_action = temp["onclick"]
+        summary_code = extract_doaction_code(summary_action)
+        parse_result.links[DataType.TRAINER_SUMMARY] = [CodeNameLinkAction(thetype=DataType.TRAINER_SUMMARY, name=entity_name, code=summary_code, action=summary_action)]
 
         parse_result.entity = trainer
         return parse_result

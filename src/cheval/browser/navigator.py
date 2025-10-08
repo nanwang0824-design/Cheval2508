@@ -43,22 +43,41 @@ class Navigator:
             print(f"Information: year={year}, month={month}")
             raise e
 
-    def open_match(self, code, action):
-        """Click and go to the page of a match"""
-        pass
+    def back(self):
+        """Go back"""
+        self.browser.back()
 
-    def open_race(self, code, link):
-        """Click and go to the page of a race"""
-        pass
+    def get_match_html(self, action: str):
+        """Enter the page of a match and get its html"""
+        self.browser.open_window_by_action(action=action, wait_time_before=0, wait_time_after=0)
+        self.browser.wait_for_load(wait_time_before=0, wait_time_after=0)
+        self.browser.find_all_elements(by=By.CSS_SELECTOR, detail="th.race_num[scope='row']")
+        return self.browser.get_html()
 
-    def open_horse(self, code, action):
-        """Click and go to the page of a horse"""
-        pass
+    def get_race_html(self, link: str):
+        """Enter the page of a race and get its html"""
+        self.browser.get(url=link, wait_time_before=0, wait_time_after=0)
+        self.browser.wait_for_load(wait_time_before=0, wait_time_after=0)
+        self.browser.find_one_element(by=By.CSS_SELECTOR, detail="div.block_header")
+        return self.browser.get_html()
 
-    def open_jockey(self, code, action):
-        """Click and go to the page of a jockey"""
-        pass
+    def get_horse_html(self, link: str):
+        """Enter the page of a race and get its html"""
+        self.browser.get(url=link, wait_time_before=0, wait_time_after=0)
+        self.browser.wait_for_load(wait_time_before=0, wait_time_after=0)
+        self.browser.find_all_elements(by=By.CSS_SELECTOR, detail="td.date")
+        return self.browser.get_html()
 
-    def open_trainer(self, code, action):
-        """Click and go to the page of a jockey"""
-        pass
+    def get_jockey_trainer_html(self, action: str):
+        """Enter the page of a jockey or trainer or his/her summary and get its html"""
+        self.browser.open_window_by_action(action=action, wait_time_before=0, wait_time_after=0)
+        self.browser.wait_for_load(wait_time_before=0, wait_time_after=0)
+        self.browser.find_all_elements(by=By.CSS_SELECTOR, detail="th.row")
+        return self.browser.get_html()
+
+    def get_odds_tan_html(self, action: str):
+        """Enter the page of a odds tan (単勝オッズ) and get its html"""
+        self.browser.open_window_by_action(action=action, wait_time_before=0, wait_time_after=0)
+        self.browser.wait_for_load(wait_time_before=0, wait_time_after=0)
+        self.browser.find_all_elements(by=By.CSS_SELECTOR, detail="tr th.horse")
+        return self.browser.get_html()

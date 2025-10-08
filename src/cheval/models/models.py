@@ -21,7 +21,7 @@ class DataType(Enum):
     JOCKEY_SUMMARY = "jockey_summary"
     TRAINER = "trainer"
     TRAINER_SUMMARY = "trainer_summary"
-    ODDS = "odds"
+    ODDS_TAN = "odds_tan"
 
 def data_type_to_its_history(data_type: DataType):
     match data_type:
@@ -80,6 +80,8 @@ class Trainer:
     "name of trainer"
     name_kana: Optional[str] = None
     "kana name of trainer"
+    retired: Optional[bool] = None
+    "retired or not"
     birth_date: Optional[datetime] = None
     "生年月日, birthday of the trainer"
     birth_place: Optional[str] = None
@@ -112,6 +114,8 @@ class Jockey:
     "name of jockey"
     name_kana: Optional[str] = None
     "kana name of jockey"
+    retired: Optional[bool] = None
+    "retired or not"
     birth_date: Optional[datetime] = None
     "生年月日, birthday of the jockey"
     height: Optional[float] = None
@@ -205,6 +209,8 @@ class Horse:
     "english name of the horse"
     rest: Optional[str] = None
     "rest state of the horse, may be an empty string, expamle: 放牧"
+    deleted: Optional[bool] = None
+    "deleted or not, 抹消"
     father_code: Optional[str] = None
     "code of the father of the horse, may be an empty string"
     father_name: Optional[str] = None
@@ -258,6 +264,18 @@ class Horse:
         self.update_time = datetime.now()
 
 @dataclass(slots=True, kw_only=True)
+class OddsTan:
+    code: Optional[str] = None
+    'code of the odds, obtained from list of races, example: pw151ou1008202401010120240106Z/F7'
+    odds: Dict[int, Optional[float]] = field(default_factory=dict)
+    "odds tan of each horses"
+    update_time: Optional[datetime] = None
+    "date and time of update"
+
+    def __post_init__(self):
+        self.update_time = datetime.now()
+
+@dataclass(slots=True, kw_only=True)
 class ResultOfRace:
     race_code: Optional[str] = None
     "code of the race"
@@ -272,7 +290,7 @@ class ResultOfRace:
     num: Optional[int] = None
     "馬番, index of the horse"
     horse_code: Optional[str] = None
-    "index of the horse"
+    "code of the horse"
     #horse_link: Optional[str] = None
     #"link of the horse"
     horse_name: Optional[str] = None
@@ -313,7 +331,9 @@ class ResultOfRace:
     "調教師名, name of trainer"
     pop: Optional[int] = None
     "単勝人気, win popularity of the horse"
-    update_time: Optional[datetime] = None
+    odds_tan: Optional[float] = None
+    "単勝オッズ, odds_tan of the horse"
+    #update_time: Optional[datetime] = None
     "date and time of update"
 
     def normalize(self):
@@ -327,7 +347,7 @@ class ResultOfRace:
                 self.age_year = age
 
     def __post_init__(self):
-        self.update_time = datetime.now()
+        #self.update_time = datetime.now()
         self.normalize()
 
 @dataclass(slots=True, kw_only=True)
@@ -385,6 +405,10 @@ class Race:
 
     def __post_init__(self):
         self.update_time = datetime.now()
+
+def add_odds_tan_to_race(race: Race, odds_tan: OddsTan):
+    for result in race.result_list:
+        result.odds_tan = odds_tan.odds[result.num]
 
 @dataclass(slots=True, kw_only=True)
 class Match:

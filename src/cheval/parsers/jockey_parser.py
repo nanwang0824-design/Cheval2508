@@ -7,7 +7,8 @@ from typing import Dict, List, Optional
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 
-from ..models.models import Jockey, SummaryOfJockeyTrainer, DataType
+from ..models.models import Jockey, SummaryOfJockeyTrainer, DataType, CodeNameLinkAction
+from ..utils.misc import extract_doaction_code
 from .base import BaseParser, ParseResult
 
 class JockeyParser(BaseParser):
@@ -23,6 +24,7 @@ class JockeyParser(BaseParser):
         """read the html string of a jockey page"""
 
         soup = BeautifulSoup(html, "html.parser")
+        links_of_summary: List[CodeNameLinkAction] = []
         parse_result = ParseResult[Jockey]()
 
         # read the name of jockey
@@ -30,6 +32,7 @@ class JockeyParser(BaseParser):
         name_kana = temp.select_one("span.kana").get_text(strip=True)
         name = temp.get_text(strip=True).replace("騎手情報", "").replace(name_kana, "")
         name_kana = name_kana.replace("（", "").replace("）", "")
+        retired = True if temp.select_one("span.retired") else False
 
         # read the table of baisc informations
         temp = soup.select("div.main.mt15 div.profile div.data dl")
@@ -63,15 +66,23 @@ class JockeyParser(BaseParser):
                     first_victory = value.get_text(strip=True)
 
         # define the jockey
-        jockey = Jockey(code=entity_code, name=name, name_kana=name_kana, birth_date=birth_date, height=height, height_unit=height_unit, weight=weight, weight_unit=weight_unit, blood_type=blood_type, first_license_year=first_license_year, license_type=license_type, birth_place=birth_place, affiliation=affiliation, affiliated_stable=affiliated_stable, first_ride=first_ride, first_victory=first_victory)
+        jockey = Jockey(code=entity_code, name=name, name_kana=name_kana, retired=retired, birth_date=birth_date, height=height, height_unit=height_unit, weight=weight, weight_unit=weight_unit, blood_type=blood_type, first_license_year=first_license_year, license_type=license_type, birth_place=birth_place, affiliation=affiliation, affiliated_stable=affiliated_stable, first_ride=first_ride, first_victory=first_victory)
 
         # read the table of year_record 本年成績
         temp = soup.select_one("#year_record")
-        jockey.summary_this_year = self._read_summary_table(tag=temp)
+        if temp is not None:
+            jockey.summary_this_year = self._read_summary_table(tag=temp)
 
-        # read the table of year_record 本年成績
+        # read the table of year_record 累計成績
         temp = soup.select_one("#total_record")
-        jockey.summary_total = self._read_summary_table(temp)
+        if temp is not None:
+            jockey.summary_total = self._read_summary_table(temp)
+
+        # link to 過去成績
+        temp = soup.select_one("div.jockey_menu.mt30 li:has(a:-soup-contains('過去成績')) a")
+        summary_action = temp["onclick"]
+        summary_code = extract_doaction_code(summary_action)
+        parse_result.links[DataType.JOCKEY_SUMMARY] = [CodeNameLinkAction(thetype=DataType.JOCKEY_SUMMARY, name=entity_name, code=summary_code, action=summary_action)]
 
         parse_result.entity = jockey
         return parse_result

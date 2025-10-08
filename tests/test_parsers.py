@@ -1,12 +1,11 @@
 # test_parsers.py
 
 import sys, os
-
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from examples import html
 from src.cheval.parsers.parsers import Parsers
-from src.cheval.models.models import DataType
+from src.cheval.models.models import DataType, add_odds_tan_to_race
 from src.cheval.storage.html_storage import HTMLStorage
 
 def test_match_list():
@@ -28,16 +27,16 @@ def test_race():
     print(pr)
 
 def test_horse():
-    test_html = html.html_horse_1
+    test_html = html.html_horse_2
     parser = Parsers()
-    pr = parser.horse.parse(html=test_html, entity_code="pw01dud102012104889/21")
+    pr = parser.horse.parse(html=test_html, entity_code="pw01dud102014102254/C6")
     print(pr)
 
 def test_jockey():
     test_html = html.html_jockey_1
     parser = Parsers()
     pr = parser.jockey.parse(html=test_html, entity_code="pw04kmk001160/FA")
-    #print(pr)
+    print(pr)
     test_html = html.html_jockey_summary_1
     pr = parser.joceky_summary.parse(html=test_html)
     print(pr)
@@ -51,6 +50,16 @@ def test_trainer():
     pr = parser.trainer_summary.parse(html=test_html)
     print(pr)
 
+def test_odds_tan():
+    test_html = html.html_race_1
+    parser = Parsers()
+    pr = parser.race.parse(html=test_html, entity_code="pw01sde1005201703010420170603/1A", entity_name="障害3歳以上オープン（混合）")
+    test_html = html.html_odds_tan_1
+    parser = Parsers()
+    pr_odds = parser.odds_tan.parse(html=test_html, entity_code="pw151ou1005201703010420170603Z/5C", entity_name="障害3歳以上オープン（混合）")
+    add_odds_tan_to_race(pr.entity, pr_odds.entity)
+    print(pr.entity.result_list)
+
 if __name__ == "__main__":
     print("Hello")
     #test_match_list()
@@ -59,3 +68,4 @@ if __name__ == "__main__":
     #test_horse()
     #test_jockey()
     #test_trainer()
+    test_odds_tan()

@@ -23,3 +23,20 @@ GitHub更新：
 git add .
 git commit -m "更新了XXX"
 git push
+
+
+1, 打开你的 Clash for Windows → 查看「代理端口」。
+一般 HTTP 代理端口是 7890（或者 7891）。
+你可以在 Clash 主界面右下角或设置页看到。
+2, 在 VS Code 的终端中执行以下命令（假设端口是 7890）：
+git config --global http.proxy http://127.0.0.1:7890
+git config --global https.proxy http://127.0.0.1:7890
+如果你不想影响所有 Git 项目，可以只在当前项目生效：
+git config http.proxy http://127.0.0.1:7890
+git config https.proxy http://127.0.0.1:7890
+3, 当你不需要使用 Clash 时，可以取消这些设置：
+git config --global --unset http.proxy
+git config --global --unset https.proxy
+4, 可选：检查当前代理设置
+git config --global --get http.proxy
+git config --global --get https.proxy

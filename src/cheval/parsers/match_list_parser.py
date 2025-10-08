@@ -21,8 +21,7 @@ class MatchListParser(BaseParser):
     """
 
     def _parse_impl(self, html: str, entity_code: str = None, entity_name: str = None) -> ParseResult[None]:
-        """read the html string of a match list, and save the informations;
-        return the links of matches if return_links=True"""
+        """read the html string of a match list, and save the informations"""
 
         links_of_matches: List[CodeNameLinkAction] = []
         parse_result = ParseResult[None]()

@@ -16,16 +16,16 @@ import src.cheval.config as config
 class Waiter:
     TIME_OUT = config.WAIT_TIMEOUT
     TIME_OUT_MAX = config.WAIT_TIMEOUT
-    TIME_OUT_MIN = 10
-    TIME_LONG = 20
-    TIME_LONG_MIN = 15
-    TIME_LONG_MAX = 25
-    TIME_MEDIUM = 11
-    TIME_MEDIUM_MIN = 8
-    TIME_MEDIUM_MAX = 14
-    TIME_SHORT = 5
-    TIME_SHORT_MIN = 3
-    TIME_SHORT_MAX = 7
+    TIME_OUT_MIN = 20
+    TIME_LONG = 10
+    TIME_LONG_MIN = 8
+    TIME_LONG_MAX = 12
+    TIME_MEDIUM = 6
+    TIME_MEDIUM_MIN = 4
+    TIME_MEDIUM_MAX = 8
+    TIME_SHORT = 2
+    TIME_SHORT_MIN = 1
+    TIME_SHORT_MAX = 3
     TIME_INTERVAL = 1
 
     def __init__(self):

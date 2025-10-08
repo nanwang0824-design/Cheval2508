@@ -10,7 +10,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.ui import WebDriverWait
 
-from cheval.utils.waiter import Waiter
+from ..utils.waiter import Waiter
+from ..utils.logging import get_logger
 
 class Browser:
     def __init__(self):
@@ -20,6 +21,7 @@ class Browser:
         #options.add_argument("--headless")
         service = Service()
         self.driver = webdriver.Chrome(service=service, options=options)
+        self.logger = get_logger("cheval.parsers.browser")
 
     def get(self, url: str, wait_time_before: Optional[int] = None, wait_time_after: Optional[int] = None):
         if wait_time_before is None:
@@ -31,8 +33,23 @@ class Browser:
             self.driver.get(url)
             Waiter.wait(wait_time_after)
         except Exception as e:
-            print(f"An exception in {inspect.currentframe().f_code.co_name} of {self.__class__}!")
-            print(f"Information: url={url}")
+            self.logger.exception(f"An exception in {inspect.currentframe().f_code.co_name} of {self.__class__}!")
+            self.logger.exception(f"Information: url={url}")
+            raise e
+
+    def wait_for_load(self, time_out: Optional[int] = None, wait_time_before: Optional[int] = None, wait_time_after: Optional[int] = None):
+        if time_out is None:
+            time_out = Waiter.TIME_OUT
+        if wait_time_before is None:
+            wait_time_before = int(0)
+        if wait_time_after is None:
+            wait_time_after = Waiter.get_wait_time_medium()
+        try:
+            Waiter.wait(wait_time_before)
+            WebDriverWait(self.driver, timeout=time_out).until(lambda d: d.execute_script("return document.readyState") == "complete")
+            Waiter.wait(wait_time_after)
+        except Exception as e:
+            self.logger.exception(f"An exception in {inspect.currentframe().f_code.co_name} of {self.__class__}!")
             raise e
         
     def switch_to_window(self, window_index: int, wait_time_before: Optional[int] = None, wait_time_after: Optional[int] = None):
@@ -45,8 +62,8 @@ class Browser:
             self.driver.switch_to.window(self.driver.window_handles[window_index])
             Waiter.wait(wait_time_after)
         except Exception as e:
-            print(f"An exception in {inspect.currentframe().f_code.co_name} of {self.__class__}!")
-            print(f"Information: window_index={window_index}")
+            self.logger.exception(f"An exception in {inspect.currentframe().f_code.co_name} of {self.__class__}!")
+            self.logger.exception(f"Information: window_index={window_index}")
             raise e
         
     def back(self, wait_time_before: Optional[int] = None, wait_time_after: Optional[int] = None):
@@ -59,7 +76,7 @@ class Browser:
             self.driver.back()
             Waiter.wait(wait_time_after)
         except Exception as e:
-            print(f"An exception in {inspect.currentframe().f_code.co_name} of {self.__class__}!")
+            self.logger.exception(f"An exception in {inspect.currentframe().f_code.co_name} of {self.__class__}!")
             raise e
 
     def close(self, wait_time_before: Optional[int] = None, wait_time_after: Optional[int] = None):
@@ -80,15 +97,15 @@ class Browser:
         if wait_time_before is None:
             wait_time_before = int(0)
         if wait_time_after is None:
-            wait_time_after = Waiter.get_wait_time_short()
+            wait_time_after = Waiter.get_wait_time_medium()
         try:
             element = WebDriverWait(self.driver, timeout=time_out).until(EC.presence_of_element_located((by, detail)))
             Waiter.wait(wait_time_before)
             element.click()
             Waiter.wait(wait_time_after)
         except Exception as e:
-            print(f"An exception in {inspect.currentframe().f_code.co_name} of {self.__class__}!")
-            print(f"Information: by={by}, detail={detail}")
+            self.logger.exception(f"An exception in {inspect.currentframe().f_code.co_name} of {self.__class__}!")
+            self.logger.exception(f"Information: by={by}, detail={detail}")
             raise e
         return element
         
@@ -104,8 +121,8 @@ class Browser:
             element = WebDriverWait(self.driver, time_out).until(EC.presence_of_element_located((by, detail)))
             Waiter.wait(wait_time_after)
         except Exception as e:
-            print(f"An exception in {inspect.currentframe().f_code.co_name} of {self.__class__}!")
-            print(f"Information: by={by}, detail={detail}")
+            self.logger.exception(f"An exception in {inspect.currentframe().f_code.co_name} of {self.__class__}!")
+            self.logger.exception(f"Information: by={by}, detail={detail}")
             raise e
         return element
         
@@ -135,8 +152,8 @@ class Browser:
             elements = self.driver.find_elements(by, detail)
             Waiter.wait(wait_time_after)
         except Exception as e:
-            print(f"An exception in {inspect.currentframe().f_code.co_name} of {self.__class__}!")
-            print(f"Information: by={by}, detail={detail}")
+            self.logger.exception(f"An exception in {inspect.currentframe().f_code.co_name} of {self.__class__}!")
+            self.logger.exception(f"Information: by={by}, detail={detail}")
             raise e
         return elements
     
@@ -153,11 +170,25 @@ class Browser:
             element.select_by_value(value)
             Waiter.wait(wait_time_after)
         except Exception as e:
-            print(f"An exception in {inspect.currentframe().f_code.co_name} of {self.__class__}!")
-            print(f"Information: by={by}, detail={detail}, value={value}")
+            self.logger.exception(f"An exception in {inspect.currentframe().f_code.co_name} of {self.__class__}!")
+            self.logger.exception(f"Information: by={by}, detail={detail}, value={value}")
             raise e
         
-    def execute_script(self, script, args, wait_time_before: Optional[int] = None, wait_time_after: Optional[int] = None):
+    def open_window_by_action(self, action, wait_time_before: Optional[int] = None, wait_time_after: Optional[int] = None):
+        if wait_time_before is None:
+            wait_time_before = int(0)
+        if wait_time_after is None:
+            wait_time_after = Waiter.get_wait_time_medium()
+        try:
+            Waiter.wait(wait_time_before)
+            self.driver.execute_script(action)
+            Waiter.wait(wait_time_after)
+        except Exception as e:
+            self.logger.exception(f"An exception in {inspect.currentframe().f_code.co_name} of {self.__class__}!")
+            self.logger.exception(f"Information: script={action}")
+            raise e
+        
+    def execute_script(self, script, *args, wait_time_before: Optional[int] = None, wait_time_after: Optional[int] = None):
         if wait_time_before is None:
             wait_time_before = int(0)
         if wait_time_after is None:
@@ -167,6 +198,6 @@ class Browser:
             self.driver.execute_script(script, args)
             Waiter.wait(wait_time_after)
         except Exception as e:
-            print(f"An exception in {inspect.currentframe().f_code.co_name} of {self.__class__}!")
-            print(f"Information: script={script}, args={args}")
+            self.logger.exception(f"An exception in {inspect.currentframe().f_code.co_name} of {self.__class__}!")
+            self.logger.exception(f"Information: script={script}, args={args}")
             raise e

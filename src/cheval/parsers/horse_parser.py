@@ -35,6 +35,10 @@ class HorseParser(BaseParser):
         if temp.select_one("span.rest"):
             rest = temp.select_one("span.rest").get_text(strip=True)
             name = name.replace(rest, "")
+        else:
+            rest = None
+        deleted = False if (temp.select_one("span.opt span")) is None else True
+
 
         # read the table of baisc informations
         temps: List[Tag] = list(soup.select("div.profile.mt20 li"))
@@ -61,6 +65,8 @@ class HorseParser(BaseParser):
                 case "調教師名":
                     trainer_code, trainer_name, trainer_affiliation = extract_dd_trainer(str(item.select_one("dd")))
                 case "生産牧場":
+                    birth_place = value
+                case "生産者":
                     birth_place = value
 
         # read the table of prize
@@ -91,14 +97,16 @@ class HorseParser(BaseParser):
                     """self.basic_info.set_info(horse_prize_zhanghai=int(value))"""
 
         # define the horse
-        horse = Horse(code=entity_code, name=name, name_en=name_en, rest=rest, father_code=father_code, father_name=father_name, mother_code=mother_code, mother_name=mother_name, father_of_mother_code=father_of_mother_code, father_of_mother_name=father_of_mother_name, mother_of_mother_code=mother_of_mother_code, mother_of_mother_name=mother_of_mother_name, sex=sex, birth_date=birth_date, color=color, owner=owner, trainer_code=trainer_code, trainer_name=trainer_name, trainer_affiliation=trainer_affiliation, birth_place=birth_place, prize_total=prize_total, prize_fujia=prize_fujia, prize_difang=prize_difang, prize_haiwai=prize_haiwai, prize_pingdi=prize_pingdi, prize_zhanghai=prize_zhanghai)
+        horse = Horse(code=entity_code, name=name, name_en=name_en, rest=rest, deleted=deleted, father_code=father_code, father_name=father_name, mother_code=mother_code, mother_name=mother_name, father_of_mother_code=father_of_mother_code, father_of_mother_name=father_of_mother_name, mother_of_mother_code=mother_of_mother_code, mother_of_mother_name=mother_of_mother_name, sex=sex, birth_date=birth_date, color=color, owner=owner, trainer_code=trainer_code, trainer_name=trainer_name, trainer_affiliation=trainer_affiliation, birth_place=birth_place, prize_total=prize_total, prize_fujia=prize_fujia, prize_difang=prize_difang, prize_haiwai=prize_haiwai, prize_pingdi=prize_pingdi, prize_zhanghai=prize_zhanghai)
 
         # find the table "出走レース"
         result_table = soup.select_one("table.basic.narrow-xy.striped")
 
         # read the race code and arrival order of the horse in the race
-        rows = result_table.select("tbody tr")
+        rows: List[Tag] = list(result_table.select("tbody tr"))
         for row in rows:
+            if row.select_one("td.race") is None:
+                continue
             columns = row.select("td")
             date = datetime.strptime(columns[0].get_text(strip=True), "%Y年%m月%d日")
             place = columns[1].get_text(strip=True)
