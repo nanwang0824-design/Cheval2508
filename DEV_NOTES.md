@@ -41,3 +41,13 @@ git config --global --unset https.proxy
 4, 可选：检查当前代理设置
 git config --global --get http.proxy
 git config --global --get https.proxy
+
+
+通过 SQLAlchemy / SQLModel 查询得到的对象默认都是 attached / 受 Session 管理 的对象，Session 会自动追踪它们的属性变化，commit() 时会把改动写回数据库。
+如果你希望拿到查询结果用于分析、建模或其他操作，而不希望对原对象的修改被写回数据库，有几种常用方法：
+1, session.expunge(obj)
+2, 使用 session.expunge_all()
+3, 使用 session.rollback() + copy
+4, 使用 autoflush=False 或 expire_on_commit=False 配合 Session
+如果只是分析建模，可以在拿到结果后 deepcopy() 或 expunge()；
+如果会有大量对象或关系复杂，可以用独立 Session + expunge_all()。

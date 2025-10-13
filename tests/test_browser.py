@@ -43,7 +43,7 @@ def test_browser():
                 cnla_jockey_summary = parse_result_jockey.links[DataType.JOCKEY_SUMMARY][0]
                 html_jockey_summary = navigator.get_jockey_trainer_html(cnla_jockey_summary.action)
                 parse_result_jockey_summary = parsers.joceky_summary.parse(html=html_jockey_summary, entity_code=cnla_jockey_summary.code, entity_name=cnla_jockey_summary.name)
-                the_jockey.summary_past = parse_result_jockey_summary.history
+                the_jockey._summary_past = parse_result_jockey_summary.history
                 navigator.back()
                 navigator.back()
             for cnla_trainer in parse_result_race.links[DataType.TRAINER]:
@@ -53,7 +53,7 @@ def test_browser():
                 cnla_trainer_summary = parse_result_trainer.links[DataType.TRAINER_SUMMARY][0]
                 html_trainer_summary = navigator.get_jockey_trainer_html(cnla_trainer_summary.action)
                 parse_result_trainer_summary = parsers.trainer_summary.parse(html=html_trainer_summary, entity_code=cnla_trainer_summary.code, entity_name=cnla_trainer_summary.name)
-                the_trainer.summary_past = parse_result_trainer_summary.history
+                the_trainer._summary_past = parse_result_trainer_summary.history
                 navigator.back()
                 navigator.back()
             navigator.back()

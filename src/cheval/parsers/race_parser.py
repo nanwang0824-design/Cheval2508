@@ -20,7 +20,7 @@ class RaceParser(BaseParser):
         pass
     """
 
-    def _parse_impl(self, html: str, entity_code: str = None, entity_name: str = None):
+    def _parse_impl(self, html: str, entity_code: str = None, entity_name: str = None, father_entity_code: str = None):
         """read the html string of a race, and save the informations"""
 
         links_of_horses: List[CodeNameLinkAction] = []
@@ -88,40 +88,28 @@ class RaceParser(BaseParser):
         distance = int(''.join(temp.find_all(text=True, recursive=False)).strip().replace(",", ""))
         distance_unit = temp.select_one("span.unit").get_text(strip=True)
 
-        race = Race(code=entity_code, name=entity_name, title=title, index=index, distance=distance, distance_unit=distance_unit, surface=surface, number_horses_in_race=None, time=time, weather=weather, turf_condition=turf_condition, dirt_condition=dirt_condition, category=category, theclass=theclass, rule=rule, weight=weight, course_detail=course_detail)
-
-        """
-        # write the informations obtained above
-        self.basic_info.set_info(hour=int(hour),
-                                 minute=int(minute),
-                                 weather=weather,
-                                 turf_condition=turf_condition,
-                                 dirt_condition=dirt_condition,
-                                 race_category=category,
-                                 race_class=theclass,
-                                 race_rule=rule,
-                                 race_weight=weight,
-                                 race_course_detail=course_detail)
-        """
+        #race: Race = Race(code=entity_code, match_code=father_code, name=entity_name, title=title, index=index, distance=distance, distance_unit=distance_unit, surface=surface, number_horses_in_race=None, time=time, weather=weather, turf_condition=turf_condition, dirt_condition=dirt_condition, category=category, theclass=theclass, rule=rule, weight=weight, course_detail=course_detail)
         
         # read the prizes of the race
         # some races have two or more lists of prizes
-        prizes = soup.select("div.race_header ul.prize div.prize_unit")
+        prizes: List[Tag] = list(soup.select("div.race_header ul.prize div.prize_unit"))
+        prize_list: List[Prize] = []
         for prize in prizes:
             prize_name = prize.select_one("div.cell.cap").get_text(strip=True)
             prize_unit = prize.select_one("span.unit").get_text(strip=True)
             prize_name = prize_name.replace(prize_unit, "")
             prize_unit = re.sub("（|）", "", prize_unit)
-            prize_list = [float(num.get_text(strip=True).replace(",", "")) for num in prize.select("span.num")]
-            race_prize = Prize(name=prize_name, unit=prize_unit, data=prize_list)
-            race.prize_list.append(race_prize)
+            prize_data = [float(num.get_text(strip=True).replace(",", "")) for num in prize.select("span.num")]
+            race_prize = Prize(name=prize_name, unit=prize_unit, data=prize_data)
+            prize_list.append(race_prize)
             #race_prize = BasicInfo.Prize(name=prize_name, unit=prize_unit, prize_list=prize_list)
             #self.basic_info.append_prize(race_prize)
 
         # read the result of every horse in the race
         results: List[Tag] = list(soup.select('table.basic.narrow-xy.striped tbody tr'))
         number_horses_in_race = len(results)
-        race.number_horses_in_race = number_horses_in_race
+        #race.number_horses_in_race = number_horses_in_race
+        result_list: List[ResultOfRace] = []
         for result in results:
             # 着順, or "place" called by the html
             # special values: '失格', '中止', '除外', '取消'
@@ -158,14 +146,13 @@ class RaceParser(BaseParser):
             temp = result.select_one("td.time").get_text(strip=True)
             if temp:
                 temp = temp.split(":")
-                time = float(temp[0]) * 60 + float(temp[1])
+                time_for_race_result = float(temp[0]) * 60 + float(temp[1])
             else:
-                time = None #BasicInfo.Result.TIME_EMPTY
+                time_for_race_result = None #BasicInfo.Result.TIME_EMPTY
             # 着差
             margin = result.select_one("td.margin").get_text(strip=True)
             # コーナー通過順位, the values in html may be empty strings
             temp = result.select("div.corner_list li")
-            #corner_list = [int(li.get_text(strip=True)) if li.get_text(strip=True) else BasicInfo.Result.CORNER_LIST_ITME_EMPTY for li in temp]
             corner_list = [int(li.get_text(strip=True)) if li.get_text(strip=True) else None for li in temp]
             # 平均1F or 推定上り, the value in html may be an empty string
             temp = result.select_one("td.f_time")
@@ -201,36 +188,16 @@ class RaceParser(BaseParser):
             temp = result.select_one("td.horse span.horse_icon img")
             horse_icon = temp["alt"] if temp else None
 
-            race_result = ResultOfRace(race_code=entity_code, arrival_order_str=arrival_order, waku=waku, waku_color=waku_color, num=num, horse_code=horse_code, horse_name=horse_name, horse_icon=horse_icon, blinker=blinker, sex_and_age=sex_and_age, weight=weight, jockey_code=jockey_code, jockey_name=jockey_name, time=time, margin=margin, corner_list=corner_list, f_time=f_time, horse_weight=horse_weight, horse_weight_delta=horse_weight_delta, trainer_code=trainer_code, trainer_name=trainer_name, pop=pop)
-            #print(race_result)
-            race.result_list.append(race_result)
+            #race_result: ResultOfRace = ResultOfRace(race_code=entity_code, arrival_order_str=arrival_order, waku=waku, waku_color=waku_color, num=num, horse_code=horse_code, horse_name=horse_name, horse_icon=horse_icon, blinker=blinker, sex_and_age=sex_and_age, weight=weight, jockey_code=jockey_code, jockey_name=jockey_name, time=time, margin=margin, f_time=f_time, horse_weight=horse_weight, horse_weight_delta=horse_weight_delta, trainer_code=trainer_code, trainer_name=trainer_name, pop=pop)
+            #race_result._corner_list = corner_list
+            #race_result.normalize()
+            race_result: ResultOfRace = ResultOfRace(race_code=entity_code, arrival_order_str=arrival_order, waku=waku, waku_color=waku_color, num=num, horse_code=horse_code, horse_name=horse_name, horse_icon=horse_icon, blinker=blinker, sex_and_age=sex_and_age, weight=weight, jockey_code=jockey_code, jockey_name=jockey_name, time=time_for_race_result, margin=margin, f_time=f_time, horse_weight=horse_weight, horse_weight_delta=horse_weight_delta, trainer_code=trainer_code, trainer_name=trainer_name, pop=pop, _corner_list=corner_list)
+            result_list.append(race_result)
 
-            """
-            # generate the result of this horse and append it to the list of results
-            race_result = BasicInfo.Result(arrival_order=arrival_order, 
-                                           waku=waku, 
-                                           waku_color=waku_color, 
-                                           num=num, 
-                                           horse_code=horse_code, 
-                                           horse_name=horse_name, 
-                                           blinker=blinker,
-                                           age=age, weight=weight, 
-                                           jockey_code=jockey_code, 
-                                           jockey_name=jockey_name, 
-                                           time=time, 
-                                           margin=margin, 
-                                           corner_list=corner_list, 
-                                           f_time=f_time, 
-                                           horse_weight=horse_weight, 
-                                           horse_weight_delta=horse_weight_delta, 
-                                           trainer_code=trainer_code, 
-                                           trainer_name=trainer_name, 
-                                           pop=pop)
-            self.basic_info.append_result(race_result)
-        #self.basic_info.print()
-        """
-
-        #print(race)
+        race: Race = Race(code=entity_code, match_code=father_entity_code, name=entity_name, title=title, index=index, distance=distance, distance_unit=distance_unit, surface=surface, number_horses_in_race=number_horses_in_race, time=time, weather=weather, turf_condition=turf_condition, dirt_condition=dirt_condition, category=category, theclass=theclass, rule=rule, weight=weight, course_detail=course_detail, _prize_list=prize_list, _result_list=result_list)
+        #race._prize_list = prize_list
+        #race._result_list = result_list
+        #race.normalize()
 
         parse_result.entity = race
         parse_result.links[DataType.HORSE] = links_of_horses

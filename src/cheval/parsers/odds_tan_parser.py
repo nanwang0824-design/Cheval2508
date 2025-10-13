@@ -20,7 +20,7 @@ class OddsTanParser(BaseParser):
         pass
     """
 
-    def _parse_impl(self, html: str, entity_code: str = None, entity_name: str = None):
+    def _parse_impl(self, html: str, entity_code: str = None, entity_name: str = None, father_entity_code: str = None):
         """read the html string of a horse page"""
 
         soup = BeautifulSoup(html, "html.parser")

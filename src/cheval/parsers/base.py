@@ -42,7 +42,7 @@ class BaseParser:
     def __init__(self):
         self.logger = get_logger(f"cheval.parsers.{self.parser_name}")
 
-    def parse(self, html: str, entity_code: str = None, entity_name: str = None,
+    def parse(self, html: str, entity_code: str = None, entity_name: str = None, father_entity_code: str = None,
               save_html: Optional[bool] = True, keep_history: Optional[bool] = None, 
               root_dir_for_save: str = DIR_FOR_SAVE_HTML,
               context: Optional[Dict[str, Any]] = None) -> ParseResult[Any]:
@@ -55,7 +55,7 @@ class BaseParser:
         if save_html:
             HTMLStorage(root_dir=root_dir_for_save).save_html(page_type=self.data_type, code=entity_code, html=html, keep_history=keep_history)
         try:
-            result: ParseResult[Any] = self._parse_impl(html, entity_code, entity_name)
+            result: ParseResult[Any] = self._parse_impl(html, entity_code, entity_name, father_entity_code)
             result._meta.setdefault("parser", self.parser_name)
             result._meta.setdefault("version", self.parser_version)
             if context:
@@ -68,7 +68,7 @@ class BaseParser:
             self.logger.exception(f"{str(e)}")
             raise e
 
-    def _parse_impl(self, html: str, entity_code: str = None, entity_name: str = None) -> ParseResult[Any]:
+    def _parse_impl(self, html: str, entity_code: str = None, entity_name: str = None, father_entity_code: str = None) -> ParseResult[Any]:
         """
         This method is overridden by subclasses. It only performs parsing and does not handle exceptions.
         Return:

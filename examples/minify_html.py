@@ -29,5 +29,5 @@ def minify_html(html: str, filename: str ="minified_html.html"):
     return compressed
 
 if __name__ == "__main__":
-  html = html.html_odds_tan_1
+  html = html.html_jockey_summary_1
   minify_html(html)

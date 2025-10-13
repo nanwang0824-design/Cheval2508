@@ -1,5 +1,8 @@
 # utils.py
 
+import sys, os
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
 import re
 from typing import List, Tuple, Optional
 
@@ -13,12 +16,19 @@ def safe_dir(dirname: Optional[str]):
 
 def order_str_to_int(order_str: str):
     """transform the string of arrival order to int"""
+    '''
     mapping = {"失格": -20, "中止": -30, "除外": -40, "取消": -50}
     order = mapping.get(order_str)
     if order:
         return order
     else:
         return int(order_str)
+    '''
+    try:
+        order = int(order_str)
+    except ValueError:
+        order = None
+    return order
     
 def sexage_to_sex_age(sexage: str):
     """transform the string (牝3, 牡5, せん6, and so on) of sex and age to seperated values"""
@@ -37,6 +47,18 @@ def minsec_to_sec(minsec: str):
         return float(temp[0]) * 60 + float(temp[1])
     else:
         return float(temp[0])
+    
+    
+def match_name_to_kai_place_nichi(name: str):
+    pattern = r"^(\d+)回(.+?)(\d+)日$"
+    match = re.match(pattern, name)
+    if match:
+        kai = int(match.group(1))
+        place: str = match.group(2)
+        nichi = int(match.group(3))
+        return kai, place, nichi
+    else:
+        return int(0), str(""), int(0)
 
 def extract_class_race(html: str):
     """"""

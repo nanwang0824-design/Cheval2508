@@ -20,7 +20,7 @@ class JockeyParser(BaseParser):
         pass
     """
 
-    def _parse_impl(self, html: str, entity_code: str = None, entity_name: str = None):
+    def _parse_impl(self, html: str, entity_code: str = None, entity_name: str = None, father_entity_code: str = None):
         """read the html string of a jockey page"""
 
         soup = BeautifulSoup(html, "html.parser")
@@ -35,8 +35,8 @@ class JockeyParser(BaseParser):
         retired = True if temp.select_one("span.retired") else False
 
         # read the table of baisc informations
-        temp = soup.select("div.main.mt15 div.profile div.data dl")
-        for term in temp:
+        temps: List[Tag] = list(soup.select("div.main.mt15 div.profile div.data dl"))
+        for term in temps:
             key = term.select_one("dt").get_text(strip=True)
             value = term.select_one("dd")
             match key:
@@ -65,18 +65,15 @@ class JockeyParser(BaseParser):
                 case "初勝利":
                     first_victory = value.get_text(strip=True)
 
-        # define the jockey
-        jockey = Jockey(code=entity_code, name=name, name_kana=name_kana, retired=retired, birth_date=birth_date, height=height, height_unit=height_unit, weight=weight, weight_unit=weight_unit, blood_type=blood_type, first_license_year=first_license_year, license_type=license_type, birth_place=birth_place, affiliation=affiliation, affiliated_stable=affiliated_stable, first_ride=first_ride, first_victory=first_victory)
-
         # read the table of year_record 本年成績
         temp = soup.select_one("#year_record")
         if temp is not None:
-            jockey.summary_this_year = self._read_summary_table(tag=temp)
+            summary_this_year = self._read_summary_table(tag=temp, jockey_trainer_code=entity_code)
 
         # read the table of year_record 累計成績
         temp = soup.select_one("#total_record")
         if temp is not None:
-            jockey.summary_total = self._read_summary_table(temp)
+            summary_total = self._read_summary_table(temp, jockey_trainer_code=entity_code)
 
         # link to 過去成績
         temp = soup.select_one("div.jockey_menu.mt30 li:has(a:-soup-contains('過去成績')) a")
@@ -84,24 +81,14 @@ class JockeyParser(BaseParser):
         summary_code = extract_doaction_code(summary_action)
         parse_result.links[DataType.JOCKEY_SUMMARY] = [CodeNameLinkAction(thetype=DataType.JOCKEY_SUMMARY, name=entity_name, code=summary_code, action=summary_action)]
 
+        # define the jockey
+        jockey: Jockey = Jockey(code=entity_code, name=name, name_kana=name_kana, retired=retired, birth_date=birth_date, height=height, height_unit=height_unit, weight=weight, weight_unit=weight_unit, blood_type=blood_type, first_license_year=first_license_year, license_type=license_type, birth_place=birth_place, affiliation=affiliation, affiliated_stable=affiliated_stable, first_ride=first_ride, first_victory=first_victory, _summary_this_year=summary_this_year, _summary_total=summary_total, summary_past_code=summary_code)
+
         parse_result.entity = jockey
         return parse_result
 
-    def parse_for_past(self, html: str):
-        """read the html string of a jockey past results page"""
-
-        soup = BeautifulSoup(html, "html.parser")
-
-        results: List[SummaryOfJockeyTrainer] = []
-
-        tables = soup.select("table.basic.narrow.mt15, table.basic.narrow.mt40")
-        for table in tables:
-            self._read_summary_table(tag=table, append_list=results, append=True)
-
-        return results
-
     @staticmethod
-    def _read_summary_table(tag: Tag, append_list: List[SummaryOfJockeyTrainer] = None, append: bool = False):
+    def _read_summary_table(tag: Tag, append_list: List[SummaryOfJockeyTrainer] = None, append: bool = False, summary_code: str = None, jockey_trainer_code: str = None):
         results: List[SummaryOfJockeyTrainer] = []
         title = tag.select_one("div.main").get_text(strip=True)
         for row in tag.select("tr"):
@@ -110,7 +97,7 @@ class JockeyParser(BaseParser):
                 continue
             type = type.get_text(strip=True)
             columns = [int(column.get_text(strip=True)) if i < 7 else (float(column.get_text(strip=True)) if column.get_text(strip=True) else None) for i, column in enumerate(row.select("td"))]
-            summary = SummaryOfJockeyTrainer(title=title, type=type, num_no1=columns[0], num_no2=columns[1], num_no3=columns[2], num_no4=columns[3], num_no5=columns[4], num_out5=columns[5], num_rides=columns[6], winning_rate=columns[7], quinella_rate=columns[8], top3_rate=columns[9])
+            summary = SummaryOfJockeyTrainer(summary_code=summary_code, jockey_trainer_code=jockey_trainer_code, title=title, type=type, num_no1=columns[0], num_no2=columns[1], num_no3=columns[2], num_no4=columns[3], num_no5=columns[4], num_out5=columns[5], num_rides=columns[6], winning_rate=columns[7], quinella_rate=columns[8], top3_rate=columns[9])
             results.append(summary)
             if append and (append_list is not None):
                 append_list.append(summary)
@@ -125,7 +112,7 @@ class JockeySummaryParser(BaseParser):
         pass
     """
 
-    def _parse_impl(self, html: str, entity_code: str = None, entity_name: str = None):
+    def _parse_impl(self, html: str, entity_code: str = None, entity_name: str = None, father_entity_code: str = None):
         """read the html string of a jockey summary page"""
 
         soup = BeautifulSoup(html, "html.parser")
@@ -135,7 +122,7 @@ class JockeySummaryParser(BaseParser):
 
         tables = soup.select("table.basic.narrow.mt15, table.basic.narrow.mt40")
         for table in tables:
-            JockeyParser._read_summary_table(tag=table, append_list=results, append=True)
+            JockeyParser._read_summary_table(tag=table, append_list=results, append=True, summary_code=entity_code, jockey_trainer_code=father_entity_code)
 
         parse_result.history = results
         return parse_result

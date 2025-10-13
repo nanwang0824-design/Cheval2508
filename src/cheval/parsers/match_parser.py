@@ -20,7 +20,7 @@ class MatchParser(BaseParser):
         pass
     """
 
-    def _parse_impl(self, html: str, entity_code: str = None, entity_name: str = None):
+    def _parse_impl(self, html: str, entity_code: str = None, entity_name: str = None, father_entity_code: str = None):
         """read the html string of a match, and save the informations"""
 
         links_of_races: List[CodeNameLinkAction] = []
@@ -34,7 +34,7 @@ class MatchParser(BaseParser):
         name = temp.get_text(strip=True).split("）")[-1].strip()
         date = datetime.strptime(temp.get_text(strip=True).split("（")[0].strip(), "%Y年%m月%d日")
         
-        thematch = Match(code=entity_code, date=date, name=name)
+        thematch: Match = Match(code=entity_code, date=date, name=name)
 
         # read the table of races
         races: List[Tag] = list(soup.select("tbody tr"))
@@ -44,7 +44,7 @@ class MatchParser(BaseParser):
             race_link = str(race.select_one("th.race_num a")["href"])
             race_code = race_link.replace("/JRADB/accessS.html?CNAME=", "")
             links_of_races.append(CodeNameLinkAction(thetype=DataType.RACE, code=race_code, name=race_name, link=race_link))
-            thematch.races[race_code] = race_name
+            thematch._races[race_code] = race_name
             odds_action = race.select_one("td.odds a")["onclick"]
             odds_code = extract_doaction_code(odds_action)
             links_of_odds.append(CodeNameLinkAction(thetype=DataType.ODDS_TAN, code=odds_code, name=race_name, action=odds_action))

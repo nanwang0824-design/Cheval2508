@@ -7,7 +7,7 @@ from typing import Dict, List
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 
-from ..utils.misc import minsec_to_sec, extract_class_race, extract_class_jockey, extract_dd_horse, extract_dd_trainer
+from ..utils.misc import minsec_to_sec, extract_cname_code, extract_class_jockey, extract_dd_horse, extract_dd_trainer
 from ..models.models import Horse, ResultOfHorse, DataType
 from .base import BaseParser, ParseResult
 
@@ -20,7 +20,7 @@ class HorseParser(BaseParser):
         pass
     """
 
-    def _parse_impl(self, html: str, entity_code: str = None, entity_name: str = None):
+    def _parse_impl(self, html: str, entity_code: str = None, entity_name: str = None, father_entity_code: str = None):
         """read the html string of a horse page"""
 
         soup = BeautifulSoup(html, "html.parser")
@@ -96,21 +96,23 @@ class HorseParser(BaseParser):
                     prize_zhanghai = int(value)
                     """self.basic_info.set_info(horse_prize_zhanghai=int(value))"""
 
-        # define the horse
-        horse = Horse(code=entity_code, name=name, name_en=name_en, rest=rest, deleted=deleted, father_code=father_code, father_name=father_name, mother_code=mother_code, mother_name=mother_name, father_of_mother_code=father_of_mother_code, father_of_mother_name=father_of_mother_name, mother_of_mother_code=mother_of_mother_code, mother_of_mother_name=mother_of_mother_name, sex=sex, birth_date=birth_date, color=color, owner=owner, trainer_code=trainer_code, trainer_name=trainer_name, trainer_affiliation=trainer_affiliation, birth_place=birth_place, prize_total=prize_total, prize_fujia=prize_fujia, prize_difang=prize_difang, prize_haiwai=prize_haiwai, prize_pingdi=prize_pingdi, prize_zhanghai=prize_zhanghai)
-
         # find the table "出走レース"
         result_table = soup.select_one("table.basic.narrow-xy.striped")
 
         # read the race code and arrival order of the horse in the race
         rows: List[Tag] = list(result_table.select("tbody tr"))
+        result_list: List[ResultOfHorse] = []
         for row in rows:
             if row.select_one("td.race") is None:
                 continue
-            columns = row.select("td")
+            columns: List[Tag] = list(row.select("td"))
             date = datetime.strptime(columns[0].get_text(strip=True), "%Y年%m月%d日")
             place = columns[1].get_text(strip=True)
-            code, name = extract_class_race(str(columns[2]))
+            race_name = columns[2].get_text(strip=True)
+            temp = columns[2].select_one("a")
+            if temp is not None:
+                race_code = extract_cname_code(temp["href"])
+            #code, name = extract_class_race(str(columns[2]))
             surface_distance = columns[3].get_text(strip=True)
             condition = columns[4].get_text(strip=True)
             num_of_horses = int(columns[5].get_text(strip=True))
@@ -123,8 +125,11 @@ class HorseParser(BaseParser):
             time = minsec_to_sec(columns[11].get_text(strip=True)) if columns[11].get_text(strip=True) else float(0.0)
             rt = columns[12].get_text(strip=True)
             # define the result
-            result = ResultOfHorse(date=date, place=place, name=name, code=code, surface_distance=surface_distance, condition=condition, num_of_horses=num_of_horses, pop=pop, arrival_order_str=arrival_order_str, jockey_code=jockey_code, jockey_name=jockey_name, weight=weight, horse_weight=horse_weight, time=time, rt=rt)
-            horse.results.append(result)
+            result = ResultOfHorse(horse_code=entity_code, date=date, place=place, race_name=race_name, race_code=race_code, surface_distance=surface_distance, condition=condition, num_of_horses=num_of_horses, pop=pop, arrival_order_str=arrival_order_str, jockey_code=jockey_code, jockey_name=jockey_name, weight=weight, horse_weight=horse_weight, time=time, rt=rt)
+            result_list.append(result)
+
+        # define the horse
+        horse = Horse(code=entity_code, name=name, name_en=name_en, rest=rest, deleted=deleted, father_code=father_code, father_name=father_name, mother_code=mother_code, mother_name=mother_name, father_of_mother_code=father_of_mother_code, father_of_mother_name=father_of_mother_name, mother_of_mother_code=mother_of_mother_code, mother_of_mother_name=mother_of_mother_name, sex=sex, birth_date=birth_date, color=color, owner=owner, trainer_code=trainer_code, trainer_name=trainer_name, trainer_affiliation=trainer_affiliation, birth_place=birth_place, prize_total=prize_total, prize_fujia=prize_fujia, prize_difang=prize_difang, prize_haiwai=prize_haiwai, prize_pingdi=prize_pingdi, prize_zhanghai=prize_zhanghai, _result_list=result_list)
 
         parse_result.entity = horse
         return parse_result
