@@ -31,7 +31,7 @@ class HTMLStorage:
         - keep_history: whether to retain historical snapshots
         """
         if keep_history is None:
-            if page_type in [DataType.MATCH_LIST, DataType.MATCH, DataType.RACE]:
+            if page_type in [DataType.MONTH, DataType.MATCH, DataType.RACE]:
                 keep_history = False
             else:
                 keep_history = True
@@ -65,7 +65,7 @@ class HTMLStorage:
     def _map_page_type(self, page_type: DataType) -> str:
         """映射页面类型到子目录"""
         mapping = {
-            DataType.MATCH_LIST: "matche_lists",
+            DataType.MONTH: "matche_lists",
             DataType.MATCH: "matches",
             DataType.RACE: "races",
             DataType.HORSE: "horses",

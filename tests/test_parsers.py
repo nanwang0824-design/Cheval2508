@@ -11,10 +11,10 @@ from src.cheval.models.models import DataType, CodeRecorder, Match, Race, Horse,
 from src.cheval.storage.html_storage import HTMLStorage
 from src.cheval.storage.database import ChevalDB
 
-def test_match_list():
-    test_html = html.html_match_list_1
+def test_month():
+    test_html = html.html_month_1
     parser = Parsers()
-    pr = parser.match_list.parse(html=test_html, entity_code="try202503")
+    pr = parser.month.parse(html=test_html, entity_code="try202503")
     print(pr)
 
 def test_match():
@@ -25,7 +25,10 @@ def test_match():
     pr = parser.match.parse(html=test_html, entity_code=code)
     thematch: Match = pr.entity
     print(f"\nmatch: {thematch}")
-    print(f"\nrace list: {thematch._races}")
+    if len(thematch._races) > 0:
+        print(f"\nthe first race (build in): {thematch._races.popitem()}")
+    else:
+        print(f"\nno race (build in): {thematch._races}")
     db = ChevalDB()
     record = db.check_code(code, DataType.MATCH)
     if record:
@@ -34,8 +37,11 @@ def test_match():
         db.insert_match(thematch)
     obtained_match = db.get_match_by_code(code)
     print("\nmatch:\n", obtained_match)
-    print("\nrace list:\n", obtained_match._races)
-    print("\ncode list:\n", db.get_all_codes())
+    if len(obtained_match._races) > 0:
+        print(f"\nthe first race (build in): {obtained_match._races.popitem()}")
+    else:
+        print(f"\nno race (build in): {obtained_match._races}")
+    #print("\ncode list:\n", db.get_all_codes())
     db.close()
 
 def test_race():
@@ -73,7 +79,7 @@ def test_race():
         print(f"\ncorner list in the first result (in database): {obtained_race_results[0]._corner_list}")
     else:
         print(f"\nno result (in database): {obtained_race_results}")
-    print("\ncode list:\n", db.get_all_codes())
+    #print("\ncode list:\n", db.get_all_codes())
     db.close()
 
 def test_horse():
@@ -106,7 +112,7 @@ def test_horse():
         print(f"\nthe first result (in database) of {len(obtained_horse_results)}: {obtained_horse_results[0]}")
     else:
         print(f"\nno result (in database): {obtained_horse_results}")
-    print("\ncode list:\n", db.get_all_codes())
+    #print("\ncode list:\n", db.get_all_codes())
     db.close()
 
 def test_jockey():
@@ -161,7 +167,7 @@ def test_jockey():
         print(f"\nthe first summary (in database): {obtained_jockey_summries[0]}")
     else:
         print(f"\nno summary (in database): {obtained_jockey_summries}")
-    print("\ncode list:\n", db.get_all_codes())
+    #print("\ncode list:\n", db.get_all_codes())
     db.close()
 
 def test_trainer():
@@ -223,18 +229,21 @@ def test_odds_tan():
     test_html = html.html_race_1
     parser = Parsers()
     pr = parser.race.parse(html=test_html, entity_code="pw01sde1005201703010420170603/1A", entity_name="障害3歳以上オープン（混合）")
+    therace: Race = pr.entity
     test_html = html.html_odds_tan_1
     parser = Parsers()
     pr_odds = parser.odds_tan.parse(html=test_html, entity_code="pw151ou1005201703010420170603Z/5C", entity_name="障害3歳以上オープン（混合）")
-    add_odds_tan_to_race(pr.entity, pr_odds.entity)
-    print(pr.entity._result_list)
+    theodds = pr_odds.entity
+    therace.add_odds_tan(theodds)
+    print(f"\nodds: {theodds}")
+    print(f"\nrace: {therace}")
 
 if __name__ == "__main__":
     print("Hello")
-    #test_match_list()
+    test_month()
     #test_match()
     #test_race()
-    #test_horse()
+    test_horse()
     #test_jockey()
     #test_trainer()
-    test_odds_tan()
+    #test_odds_tan()

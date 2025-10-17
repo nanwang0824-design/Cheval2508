@@ -7,7 +7,7 @@ from typing import Dict, List
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 
-from ..utils.misc import minsec_to_sec, extract_class_race, extract_class_jockey, extract_dd_horse, extract_dd_trainer
+from ..utils.misc import parse_float, parse_int
 from ..models.models import Horse, ResultOfHorse, DataType, CodeNameLinkAction, OddsTan
 from .base import BaseParser, ParseResult
 
@@ -33,8 +33,8 @@ class OddsTanParser(BaseParser):
         #print(temp.prettify())
         temps: List[Tag] = list(temp.select("tr"))
         for temp in temps:
-            num = int(temp.select_one("td.num").get_text(strip=True))
-            odds = float(temp.select_one("td.odds_tan").get_text(strip=True))
+            num = parse_int(temp.select_one("td.num").get_text(strip=True))
+            odds = parse_float(temp.select_one("td.odds_tan").get_text(strip=True))
             odds_tan.odds[num] = odds
 
         parse_result.entity = odds_tan

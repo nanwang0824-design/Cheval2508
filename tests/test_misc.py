@@ -1,5 +1,8 @@
 # test_misc.py
 
+import sys, os
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
 import inspect
 
 class Father:
@@ -24,7 +27,3 @@ class Child(Father):
 
 if __name__ == "__main__":
     print("Hello")
-    father = Father()
-    father.printname()
-    child = Child()
-    child.printname()

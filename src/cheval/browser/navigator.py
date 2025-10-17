@@ -47,6 +47,10 @@ class Navigator:
         """Go back"""
         self.browser.back()
 
+    def close(self):
+        """Close"""
+        self.browser.close()
+
     def get_match_html(self, action: str):
         """Enter the page of a match and get its html"""
         self.browser.open_window_by_action(action=action, wait_time_before=0, wait_time_after=0)

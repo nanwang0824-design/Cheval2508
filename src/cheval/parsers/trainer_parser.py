@@ -33,6 +33,8 @@ class TrainerParser(BaseParser):
         name = temp.get_text(strip=True).replace("調教師情報", "").replace(name_kana, "")
         name_kana = name_kana.replace("（", "").replace("）", "")
         retired = True if temp.select_one("span.retired") else False
+        if retired:
+            name = name.replace("引退", "", 1)
 
         # read the table of baisc informations
         temp = soup.select("div.main.mt15 div.profile div.data dl")
@@ -53,17 +55,19 @@ class TrainerParser(BaseParser):
                 case "初勝利":
                     first_victory = value.get_text(strip=True)
 
-        trainer = Trainer(code=entity_code, name=name, name_kana=name_kana, retired=retired, birth_date=birth_date, birth_place=birth_place, license_acquisition_year=license_acquisition_year, affiliation=affiliation, first_race=first_race, first_victory=first_victory)
-
         # read the table of year_record 本年成績
         temp = soup.select_one("#year_record")
         if temp is not None:
-            trainer._summary_this_year = self._read_summary_table(tag=temp)
+            summary_this_year = self._read_summary_table(tag=temp, jockey_trainer_code=entity_code) if temp else []
+        else:
+            summary_this_year = []
 
         # read the table of year_record 累計成績
         temp = soup.select_one("#total_record")
         if temp is not None:
-            trainer._summary_total = self._read_summary_table(temp)
+            summary_total = self._read_summary_table(temp, jockey_trainer_code=entity_code) if temp else []
+        else:
+            summary_total = []
 
         # link to 過去成績
         temp = soup.select_one("div.jockey_menu.mt30 li:has(a:-soup-contains('過去成績')) a")
@@ -71,22 +75,11 @@ class TrainerParser(BaseParser):
         summary_code = extract_doaction_code(summary_action)
         parse_result.links[DataType.TRAINER_SUMMARY] = [CodeNameLinkAction(thetype=DataType.TRAINER_SUMMARY, name=entity_name, code=summary_code, action=summary_action)]
 
+        # defin the trainer
+        trainer = Trainer(code=entity_code, name=name, name_kana=name_kana, retired=retired, birth_date=birth_date, birth_place=birth_place, license_acquisition_year=license_acquisition_year, affiliation=affiliation, first_race=first_race, first_victory=first_victory, _summary_this_year=summary_this_year, _summary_total=summary_total, summary_past_code=summary_code)
+
         parse_result.entity = trainer
         return parse_result
-
-    def parse_for_past(self, html: str):
-        """read the html string of a trainer past results page,
-        return the list of SummaryOfJockeyTrainer instances that records the information read"""
-
-        soup = BeautifulSoup(html, "html.parser")
-
-        results: List[SummaryOfJockeyTrainer] = []
-
-        tables = soup.select("table.basic.narrow.mt15, table.basic.narrow.mt40")
-        for table in tables:
-            self._read_summary_table(tag=table, append_list=results, append=True)
-
-        return results
 
     @staticmethod
     def _read_summary_table(tag: Tag, append_list: List[SummaryOfJockeyTrainer] = None, append: bool = False, summary_code: str = None, jockey_trainer_code: str = None):

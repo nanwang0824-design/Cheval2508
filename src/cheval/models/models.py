@@ -19,7 +19,7 @@ class DataType(Enum):
     """type of the data"""
     BASE = "base"
     FAILED = "failed"
-    MATCH_LIST = "match_list"
+    MONTH = "month"
     MATCH = "match"
     RACE = "race"
     RACE_RESULT = "race_result"
@@ -29,7 +29,7 @@ class DataType(Enum):
     JOCKEY_SUMMARY = "jockey_summary"
     TRAINER = "trainer"
     TRAINER_SUMMARY = "trainer_summary"
-    JOCKEY_TRAINER_SUMMARY = "trainer_trainer_summary"
+    JOCKEY_TRAINER_SUMMARY = "jockey_trainer_summary"
     ODDS_TAN = "odds_tan"
 
 def data_type_to_its_history(data_type: DataType):
@@ -126,6 +126,8 @@ class Trainer(SQLModel, table=True):
     "summary of the total results"
     _summary_past: List[SummaryOfJockeyTrainer] = PrivateAttr(default_factory=list)
     "summary of the past results"
+    summary_past_code: Optional[str] = Field(default=None)
+    "code of the summary of the past results"
     update_time: Optional[datetime] = Field(default_factory=datetime.now)
     "date and time of update"
 
@@ -285,6 +287,8 @@ class Horse(SQLModel, table=True):
     "rest state of the horse, may be an empty string, expamle: 放牧"
     deleted: Optional[bool] = Field(default=None)
     "deleted or not, 抹消"
+    deleted_date: Optional[datetime] = Field(default=None)
+    "deleted or not, 抹消"
     father_code: Optional[str] = Field(default=None)
     "code of the father of the horse, may be an empty string"
     father_name: Optional[str] = Field(default=None)
@@ -432,7 +436,7 @@ class ResultOfRace(SQLModel, table=True):
     "date and time of update"
 
     def normalize(self):
-        orders = [0, 0, 0, 0]
+        orders = [None, None, None, None]
         for i in range(min(len(orders), len(self._corner_list))):
             orders[i] = self._corner_list[i]
         self.order_corner_1 = orders[0]
@@ -595,10 +599,11 @@ class Match(SQLModel, table=True):
     "date and time of update"
 
     def normalize(self):
-        kai, place, nichi = match_name_to_kai_place_nichi(self.name)
-        self.kai = kai
-        self.place = place
-        self.nichi = nichi
+        if (self.kai is None) or (self.place is None) or (self.nichi is None) and (self.name is not None):
+            kai, place, nichi = match_name_to_kai_place_nichi(self.name)
+            self.kai = kai
+            self.place = place
+            self.nichi = nichi
         return self
     
     def __init__(self, **data):
@@ -611,6 +616,15 @@ class Match(SQLModel, table=True):
             object.__setattr__(self, "__pydantic_private__", {})
         if "_races" not in self.__pydantic_private__:
             self.__pydantic_private__["_races"] = {}
+
+class Month(SQLModel, table=True):
+    __tablename__ = DataType.MONTH.value
+    code: Optional[str] = Field(default=None, primary_key=True)
+    "unique code of the month, example: 202503"
+    number_races: Optional[int] = Field(default=None)
+    "number of races in the month"
+    update_time: datetime = Field(default_factory=datetime.now)
+    "date and time of update"
 
 class EnumType(TypeDecorator):
     """A general type for converting between Enum and String.

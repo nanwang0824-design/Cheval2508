@@ -1,6 +1,6 @@
 # parsers.py
 
-from .match_list_parser import MatchListParser
+from .month_parser import MonthParser
 from .match_parser import MatchParser
 from .race_parser import RaceParser
 from .horse_parser import HorseParser
@@ -11,7 +11,7 @@ from .odds_tan_parser import OddsTanParser
 class Parsers:
 
     def __init__(self):
-        self.match_list = MatchListParser()
+        self.month = MonthParser()
         self.match = MatchParser()
         self.race = RaceParser()
         self.odds_tan = OddsTanParser()

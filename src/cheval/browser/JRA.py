@@ -1,26 +1,31 @@
-# test_browser.py
-
-import sys, os
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+# JRA.py
 
 import random
 
-from src.cheval.browser.JRA import parse_JRA
+from .browser import Browser
+from .navigator import Navigator
+from ..parsers.parsers import Parsers
+from ..models.models import DataType, Month, Match, Race, Horse, Jockey, Trainer, OddsTan
+from ..config import BASE_URL
+from ..storage.database import ChevalDB
+from ..utils.logging import get_logger
 
-'''
-def test_browser():
+
+def parse_JRA(year: int, month: int):
+    month_code = str(year).zfill(4)+str(month).zfill(2)
+    db = ChevalDB()
+    if db.check_code(code=month_code, datetype=DataType.MONTH) is not None:
+        db.close()
+        return
     browser = Browser()
     navigator = Navigator(browser)
     parsers = Parsers()
-    db = ChevalDB()
     logger = get_logger(f"cheval.test.browser")
     navigator.go_to_search_page()
-    year = 2023 #random.choice(range(2020, 2025))
-    month = 3 #random.choice(range(1, 13))
     navigator.search_by_year_month(year, month)
     html_month = navigator.get_html()
-    parse_month_list = parsers.month.parse(html=html_month, entity_code=str(year).zfill(4)+str(month).zfill(2))
-    the_month = parse_month_list.entity
+    parse_month_list = parsers.month.parse(html=html_month, entity_code=month_code)
+    the_month: Month = parse_month_list.entity
     for cnla_match in parse_month_list.links[DataType.MATCH]:
         if db.check_code(code=cnla_match.code, datetype=DataType.MATCH) is not None:
             logger.info(f"Skip: {cnla_match}")
@@ -96,10 +101,4 @@ def test_browser():
     navigator.back()
     navigator.close()
     db.close()
-'''
-
-if __name__ == "__main__":
-    year = 2025 #random.choice(range(2020, 2025))
-    month = 8 #random.choice(range(1, 13))
-    parse_JRA(year=year, month=month)
-    input()
+    logger.info(f"Finish: {the_month.code}")

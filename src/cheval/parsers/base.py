@@ -51,7 +51,7 @@ class BaseParser:
         This method is responsible for catching exceptions, saving the HTML, and recording information in the returned ParseResult._meta .
         context: Any dictionary used to record contextual information such as year/month/race number/horse index (for easy backtracking).
         """
-        self.logger.info(f"begin to parse the HTML by {inspect.currentframe().f_code.co_name} of {self.__class__}\n\tentity_code={entity_code}, entity_name={entity_name},\n\tsave_html={save_html}, keep_history={keep_history}, root_dir_for_save={root_dir_for_save},\n\tcontext: {context}")
+        self.logger.info(f"context: {context}\n\tentity_code={entity_code}, entity_name={entity_name},\n\tsave_html={save_html}, keep_history={keep_history}, root_dir_for_save={root_dir_for_save}")
         if save_html:
             HTMLStorage(root_dir=root_dir_for_save).save_html(page_type=self.data_type, code=entity_code, html=html, keep_history=keep_history)
         try:

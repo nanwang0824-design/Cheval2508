@@ -51,3 +51,32 @@ git config --global --get https.proxy
 4, 使用 autoflush=False 或 expire_on_commit=False 配合 Session
 如果只是分析建模，可以在拿到结果后 deepcopy() 或 expunge()；
 如果会有大量对象或关系复杂，可以用独立 Session + expunge_all()。
+
+你的 parser 大多是 soup.select_one("某个硬编码的 CSS selector")。
+这种方式简洁，但风险是：JRA 网站页面结构一旦微调，就全挂。
+解决办法：
+给 parser 加一个 小的 selector 配置层（例如放到 selectors.py 或 config.json）。
+这样修改页面时只改配置，不用改 parser 逻辑。
+
+仔细修改过的parser: month, match, race, horse
+
+表中的问题
+trainer_jockey_summary
+	jockey_trainer_code经常空缺
+trainer
+	缺少summary_past_code
+
+2023-03
+00:58:37-04:04:10
+08:53:15-10:58:56
+11:22:48-18:00:33
+01:43:27-03:03:42
+totally 13:09:14
+
+2025-09
+2025-10-16 14:00:42	2025-10-17 01:02:29
+totally 11:01:47
+
+约7天=1年？
+
+一年总共举行36次比赛，最多举行288日赛马日

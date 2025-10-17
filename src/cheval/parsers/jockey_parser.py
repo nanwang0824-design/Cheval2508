@@ -8,24 +8,19 @@ from bs4 import BeautifulSoup
 from bs4.element import Tag
 
 from ..models.models import Jockey, SummaryOfJockeyTrainer, DataType, CodeNameLinkAction
-from ..utils.misc import extract_doaction_code
+from ..utils.misc import extract_cname_code, extract_doaction_code, parse_float, parse_int, parse_minsec
 from .base import BaseParser, ParseResult
 
 class JockeyParser(BaseParser):
     data_type = DataType.JOCKEY
     parser_name = data_type.value
 
-    """
-    def __init__(self):
-        pass
-    """
-
     def _parse_impl(self, html: str, entity_code: str = None, entity_name: str = None, father_entity_code: str = None):
         """read the html string of a jockey page"""
 
-        soup = BeautifulSoup(html, "html.parser")
-        links_of_summary: List[CodeNameLinkAction] = []
         parse_result = ParseResult[Jockey]()
+
+        soup = BeautifulSoup(html, "html.parser")
 
         # read the name of jockey
         temp = soup.select_one("div.header_line.no-mb span.txt")
@@ -33,6 +28,8 @@ class JockeyParser(BaseParser):
         name = temp.get_text(strip=True).replace("騎手情報", "").replace(name_kana, "")
         name_kana = name_kana.replace("（", "").replace("）", "")
         retired = True if temp.select_one("span.retired") else False
+        if retired:
+            name = name.replace("引退", "", 1)
 
         # read the table of baisc informations
         temps: List[Tag] = list(soup.select("div.main.mt15 div.profile div.data dl"))
@@ -44,14 +41,14 @@ class JockeyParser(BaseParser):
                     birth_date = datetime.strptime(value.get_text(strip=True), "%Y年%m月%d日")
                 case "身長":
                     height_unit = value.select_one("span.unit").get_text(strip=True)
-                    height = float(value.get_text(strip=True).replace(height_unit, ""))
+                    height = parse_float(value.get_text(strip=True).replace(height_unit, ""))
                 case "体重":
                     weight_unit = value.select_one("span.unit").get_text(strip=True)
-                    weight = float(value.get_text(strip=True).replace(weight_unit, ""))
+                    weight = parse_float(value.get_text(strip=True).replace(weight_unit, ""))
                 case "血液型":
                     blood_type = value.get_text(strip=True)
                 case "初免許年":
-                    first_license_year = int(value.get_text(strip=True).replace("年", ""))
+                    first_license_year = parse_int(value.get_text(strip=True).replace("年", ""))
                 case "免許種類":
                     license_type = value.get_text(strip=True)
                 case "出身地":
@@ -67,13 +64,11 @@ class JockeyParser(BaseParser):
 
         # read the table of year_record 本年成績
         temp = soup.select_one("#year_record")
-        if temp is not None:
-            summary_this_year = self._read_summary_table(tag=temp, jockey_trainer_code=entity_code)
+        summary_this_year = self._read_summary_table(tag=temp, jockey_trainer_code=entity_code) if temp else []
 
         # read the table of year_record 累計成績
         temp = soup.select_one("#total_record")
-        if temp is not None:
-            summary_total = self._read_summary_table(temp, jockey_trainer_code=entity_code)
+        summary_total = self._read_summary_table(temp, jockey_trainer_code=entity_code) if temp else []
 
         # link to 過去成績
         temp = soup.select_one("div.jockey_menu.mt30 li:has(a:-soup-contains('過去成績')) a")
@@ -91,12 +86,13 @@ class JockeyParser(BaseParser):
     def _read_summary_table(tag: Tag, append_list: List[SummaryOfJockeyTrainer] = None, append: bool = False, summary_code: str = None, jockey_trainer_code: str = None):
         results: List[SummaryOfJockeyTrainer] = []
         title = tag.select_one("div.main").get_text(strip=True)
-        for row in tag.select("tr"):
+        temps: List[Tag] = list(tag.select("tr"))
+        for row in temps:
             type = row.select_one("th[scope='row']")
             if not type:
                 continue
             type = type.get_text(strip=True)
-            columns = [int(column.get_text(strip=True)) if i < 7 else (float(column.get_text(strip=True)) if column.get_text(strip=True) else None) for i, column in enumerate(row.select("td"))]
+            columns = [parse_int(column.get_text(strip=True)) if i < 7 else parse_float(column.get_text(strip=True)) for i, column in enumerate(row.select("td"))]
             summary = SummaryOfJockeyTrainer(summary_code=summary_code, jockey_trainer_code=jockey_trainer_code, title=title, type=type, num_no1=columns[0], num_no2=columns[1], num_no3=columns[2], num_no4=columns[3], num_no5=columns[4], num_out5=columns[5], num_rides=columns[6], winning_rate=columns[7], quinella_rate=columns[8], top3_rate=columns[9])
             results.append(summary)
             if append and (append_list is not None):
@@ -106,11 +102,6 @@ class JockeyParser(BaseParser):
 class JockeySummaryParser(BaseParser):
     data_type = DataType.JOCKEY_SUMMARY
     parser_name = data_type.value
-
-    """
-    def __init__(self):
-        pass
-    """
 
     def _parse_impl(self, html: str, entity_code: str = None, entity_name: str = None, father_entity_code: str = None):
         """read the html string of a jockey summary page"""

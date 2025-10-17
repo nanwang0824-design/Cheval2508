@@ -30,7 +30,7 @@ def order_str_to_int(order_str: str):
         order = None
     return order
     
-def sexage_to_sex_age(sexage: str):
+def sexage_to_sex_age(sexage: Optional[str]):
     """transform the string (牝3, 牡5, せん6, and so on) of sex and age to seperated values"""
     pattern = r"(.+?)(\d+)"
     match = re.match(pattern, sexage)
@@ -39,26 +39,40 @@ def sexage_to_sex_age(sexage: str):
         age = int(match.group(2))
         return sex, age
     else:
-        return str(""), int(0)
+        return None, None
     
-def minsec_to_sec(minsec: str):
-    temp = minsec.split(":")
-    if len(temp) == 2:
-        return float(temp[0]) * 60 + float(temp[1])
-    else:
-        return float(temp[0])
-    
-    
-def match_name_to_kai_place_nichi(name: str):
+def match_name_to_kai_place_nichi(name: Optional[str]):
     pattern = r"^(\d+)回(.+?)(\d+)日$"
     match = re.match(pattern, name)
     if match:
         kai = int(match.group(1))
-        place: str = match.group(2)
+        place: str = str(match.group(2))
         nichi = int(match.group(3))
         return kai, place, nichi
     else:
-        return int(0), str(""), int(0)
+        return None, None, None
+    
+def parse_minsec(minsec: Optional[str]):
+    try:
+        temp = minsec.split(":")
+        if len(temp) == 2:
+            return float(temp[0]) * 60 + float(temp[1])
+        else:
+            return float(temp[0])
+    except:
+        return None
+    
+def parse_int(intstr: Optional[str]):
+    try:
+        return int(intstr)
+    except:
+        return None
+    
+def parse_float(floatstr: Optional[str]):
+    try:
+        return float(floatstr)
+    except:
+        return None
 
 def extract_class_race(html: str):
     """"""
@@ -104,7 +118,6 @@ def extract_dd_trainer(html: str):
         return code, name, affiliation
     else:
         return None, None, None
-
 
 def extract_doaction_code(onclick_str):
     """Extract the second parameter from the doAction JS call"""

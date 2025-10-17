@@ -4,8 +4,9 @@ import os
 from typing import List, Optional, Tuple
 
 from sqlmodel import SQLModel, Field, create_engine, Session, select
+import pandas
 
-from ..models.models import DataType, CodeRecorder, Match, Race, ResultOfRace, Horse, ResultOfHorse, Jockey, Trainer, SummaryOfJockeyTrainer
+from ..models.models import DataType, CodeRecorder, Month, Match, Race, ResultOfRace, Horse, ResultOfHorse, Jockey, Trainer, SummaryOfJockeyTrainer, OddsTan
 from ..config import DIR_FOR_DATA
 
 class ChevalDB:
@@ -50,6 +51,19 @@ class ChevalDB:
                 session.commit()
                 session.refresh(record)
             return record
+
+    def insert_month(self, themonth: Month):
+        """Insert month data. Before calling this function, you must firstly call check_code to ensure that there is no Month record with the same code."""
+        thecode = CodeRecorder(code=themonth.code, name=themonth.code, datetype=DataType.MONTH)
+        with self.get_session() as session:
+            session.add(themonth)
+            session.add(thecode)
+            session.commit()
+
+    def get_month_by_code(self, code: str) -> Optional[Month]:
+        """Get the month by code."""
+        with self.get_session() as session:
+            return session.get(Month, code)
 
     def insert_match(self, thematch: Match):
         """Insert match data. Before calling this function, you must firstly call check_code to ensure that there is no Match record with the same code."""
@@ -162,29 +176,48 @@ class ChevalDB:
             statement = select(SummaryOfJockeyTrainer).where(SummaryOfJockeyTrainer.jockey_trainer_code == code)
             return session.exec(statement).all()
 
-    '''def insert_horse(self, horse: Horse):
-        """插入马匹数据"""
+    def insert_odds_tan(self, theoddstan: OddsTan):
+        """The data of odds tan is saved in race, so only insert the code of odds tan. Before calling this function, you must firstly call check_code to ensure that there is no Race record with the same code."""
+        thecode = CodeRecorder(code=theoddstan.code, name=None, datetype=DataType.ODDS_TAN)
+        #print(thecode)
         with self.get_session() as session:
-            session.add(horse)
+            session.add(thecode)
             session.commit()
-
-    def get_horse_by_code(self, code: str) -> Optional[Horse]:
-        """根据马匹代码查询马匹数据"""
-        with self.get_session() as session:
-            return session.get(Horse, code)
-
-    def insert_result(self, result: ResultOfHorse):
-        """插入马匹赛果数据"""
-        with self.get_session() as session:
-            session.add(result)
-            session.commit()
-
-    def get_results_by_horse_code(self, horse_code: str):
-        """根据马匹代码查询赛果"""
-        with self.get_session() as session:
-            results = session.query(ResultOfHorse).filter(ResultOfHorse.horse_code == horse_code).all()
-            return results'''
 
     def close(self):
         """关闭数据库连接"""
         self.session_factory.close()
+
+    def export_to_excel(self):
+        """Export all database tables into an Excel file (each table as a separate sheet)."""
+        # 确定数据库文件路径
+        db_url = str(self.engine.url.database)
+        if not db_url or not os.path.exists(db_url):
+            raise FileNotFoundError("Database file not found.")
+
+        # Excel 输出路径
+        excel_path = os.path.splitext(db_url)[0] + ".xlsx"
+
+        # 打开数据库 session
+        with self.get_session() as session:
+            # 获取所有已定义的 SQLModel 表
+            tables = SQLModel.metadata.tables.keys()
+            if not tables:
+                print("No tables found in database.")
+                return
+
+            with pandas.ExcelWriter(excel_path, engine="openpyxl") as writer:
+                for table_name in tables:
+                    try:
+                        # 查询表中所有数据
+                        df = pandas.read_sql_table(table_name, session.bind)
+                        if not df.empty:
+                            df.to_excel(writer, sheet_name=table_name[:31], index=False)
+                        else:
+                            # 空表也写入，以防遗漏
+                            pandas.DataFrame().to_excel(writer, sheet_name=table_name[:31], index=False)
+                    except Exception as e:
+                        print(f"⚠️ Failed to export table '{table_name}': {e}")
+
+        print(f"✅ Database successfully exported to {excel_path}")
+        return excel_path

@@ -83,7 +83,7 @@ class Browser:
         if wait_time_before is None:
             wait_time_before = int(0)
         if wait_time_after is None:
-            wait_time_after = Waiter.get_wait_time_short()
+            wait_time_after = Waiter.get_wait_time_long()
         Waiter.wait(wait_time_before)
         self.driver.quit()
         Waiter.wait(wait_time_after)
